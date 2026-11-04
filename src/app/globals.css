@@ -1,0 +1,358 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource/opendyslexic/400.css";
+@import "@fontsource/opendyslexic/700.css";
+
+/* Thème sombre piloté par data-theme (posé avant le premier rendu, sans flash). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-reading);
+  --font-mono: var(--font-code);
+  --font-heading: var(--font-reading);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info-soft: var(--info-soft);
+  --color-ruler: var(--ruler);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Mouvement : uniquement transform + opacity, jamais de boucle rapide. */
+  --animate-card-in: card-in var(--dur-base) var(--ease-calm) both;
+  --animate-fade-in: fade-in var(--dur-base) var(--ease-calm) both;
+  --animate-calm-pulse: calm-pulse 2400ms ease-in-out infinite;
+  --animate-float-up: float-up var(--dur-celebrate) var(--ease-calm) both;
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--move));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  /* Respiration très lente (2,4 s) pour les squelettes : pas de flash. */
+  @keyframes calm-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.72;
+    }
+  }
+  @keyframes float-up {
+    from {
+      opacity: 0;
+      transform: translateY(0) scale(0.9);
+    }
+    25% {
+      opacity: 0.9;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-120px) scale(1);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Tokens sémantiques. Aucune couleur codée en dur dans les composants.
+   --------------------------------------------------------------------------- */
+:root {
+  --radius: 0.875rem;
+
+  --dur-fast: 180ms;
+  --dur-base: 260ms;
+  --dur-flip: 400ms;
+  --dur-slow: 420ms;
+  --dur-celebrate: 1800ms;
+  --ease-calm: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --move: 12px;
+
+  --reading-size: 1.125rem;
+  --reading-leading: 1.65;
+  --font-reading: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-code: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Clair : papier chaud, encre ardoise, fil bleu-vert */
+  --background: oklch(0.982 0.006 85);
+  --foreground: oklch(0.27 0.02 255);
+  --card: oklch(0.997 0.003 85);
+  --card-foreground: oklch(0.27 0.02 255);
+  --popover: oklch(0.997 0.003 85);
+  --popover-foreground: oklch(0.27 0.02 255);
+  --primary: oklch(0.47 0.085 200);
+  --primary-foreground: oklch(0.99 0.002 85);
+  --secondary: oklch(0.935 0.025 200);
+  --secondary-foreground: oklch(0.32 0.055 205);
+  --muted: oklch(0.95 0.008 85);
+  --muted-foreground: oklch(0.46 0.02 255);
+  --accent: oklch(0.935 0.04 70);
+  --accent-foreground: oklch(0.36 0.06 55);
+  --success: oklch(0.47 0.09 150);
+  --success-soft: oklch(0.94 0.035 150);
+  --warning: oklch(0.5 0.1 65);
+  --warning-soft: oklch(0.95 0.04 85);
+  --info-soft: oklch(0.94 0.02 240);
+  --destructive: oklch(0.5 0.15 30);
+  --destructive-foreground: oklch(0.99 0.002 85);
+  --border: oklch(0.885 0.01 85);
+  --input: oklch(0.6 0.015 255);
+  --ring: oklch(0.47 0.1 200);
+  --ruler: oklch(0.47 0.085 200 / 12%);
+  --celebrate-1: oklch(0.8 0.08 70);
+  --celebrate-2: oklch(0.78 0.07 190);
+  --celebrate-3: oklch(0.82 0.06 150);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --background: oklch(0.205 0.015 255);
+  --foreground: oklch(0.935 0.01 85);
+  --card: oklch(0.245 0.016 255);
+  --card-foreground: oklch(0.935 0.01 85);
+  --popover: oklch(0.245 0.016 255);
+  --popover-foreground: oklch(0.935 0.01 85);
+  --primary: oklch(0.79 0.085 195);
+  --primary-foreground: oklch(0.2 0.03 220);
+  --secondary: oklch(0.3 0.03 200);
+  --secondary-foreground: oklch(0.9 0.03 195);
+  --muted: oklch(0.275 0.015 255);
+  --muted-foreground: oklch(0.77 0.015 85);
+  --accent: oklch(0.32 0.04 60);
+  --accent-foreground: oklch(0.92 0.04 75);
+  --success: oklch(0.8 0.1 150);
+  --success-soft: oklch(0.3 0.04 150);
+  --warning: oklch(0.84 0.1 80);
+  --warning-soft: oklch(0.31 0.04 75);
+  --info-soft: oklch(0.29 0.03 240);
+  --destructive: oklch(0.75 0.13 30);
+  --destructive-foreground: oklch(0.2 0.03 30);
+  --border: oklch(0.35 0.015 255);
+  --input: oklch(0.6 0.015 255);
+  --ring: oklch(0.79 0.085 195);
+  --ruler: oklch(0.79 0.085 195 / 14%);
+  --celebrate-1: oklch(0.7 0.08 70);
+  --celebrate-2: oklch(0.68 0.07 190);
+  --celebrate-3: oklch(0.7 0.06 150);
+  color-scheme: dark;
+}
+
+/* Contraste élevé : noir sur blanc, bordures marquées, focus épais. */
+[data-theme="contrast"] {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0.32 0.13 260);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.02 260);
+  --secondary-foreground: oklch(0 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.2 0 0);
+  --accent: oklch(0.94 0.04 90);
+  --accent-foreground: oklch(0 0 0);
+  --success: oklch(0.35 0.1 150);
+  --success-soft: oklch(0.95 0.03 150);
+  --warning: oklch(0.38 0.09 60);
+  --warning-soft: oklch(0.96 0.04 90);
+  --info-soft: oklch(0.95 0.02 240);
+  --destructive: oklch(0.42 0.17 28);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0.32 0.13 260);
+  --ruler: oklch(0.85 0.12 95 / 45%);
+  --celebrate-1: oklch(0.8 0.08 70);
+  --celebrate-2: oklch(0.78 0.07 190);
+  --celebrate-3: oklch(0.82 0.06 150);
+  color-scheme: light;
+}
+
+/* Police alternative */
+[data-font="dyslexic"] {
+  --font-reading: "OpenDyslexic", var(--font-atkinson), ui-sans-serif, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   Mouvement : normal / réduit / aucun. prefers-reduced-motion = au moins réduit.
+   --------------------------------------------------------------------------- */
+[data-motion="reduced"] {
+  --move: 0px;
+  --dur-flip: 0ms;
+  --dur-celebrate: 900ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --move: 0px;
+    --dur-flip: 0ms;
+    --dur-celebrate: 900ms;
+  }
+}
+[data-motion="none"] *,
+[data-motion="none"] *::before,
+[data-motion="none"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--reading-size);
+    line-height: var(--reading-leading);
+    font-feature-settings: "kern";
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* Focus toujours visible, épais et calme */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  [data-theme="contrast"] :focus-visible {
+    outline-width: 4px;
+  }
+  ::selection {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+  /* Pas de défilement animé brusque */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+@layer components {
+  /* Bloc de lecture : 5 lignes max sur mobile, le reste derrière « En savoir plus » */
+  .reading-block {
+    max-width: 62ch;
+    text-wrap: pretty;
+  }
+  .clamp-5 {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Retournement 3D doux des flashcards (400 ms) */
+  .flip-scene {
+    perspective: 1400px;
+  }
+  .flip-card {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform var(--dur-flip) var(--ease-calm);
+  }
+  .flip-card[data-flipped="true"] {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .flip-back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+  }
+  /* En mouvement réduit : pas de rotation, on montre simplement l'autre face. */
+  [data-motion="reduced"] .flip-card[data-flipped="true"],
+  [data-motion="none"] .flip-card[data-flipped="true"] {
+    transform: none;
+  }
+  [data-motion="reduced"] .flip-card[data-flipped="true"] .flip-front,
+  [data-motion="none"] .flip-card[data-flipped="true"] .flip-front {
+    visibility: hidden;
+  }
+  [data-motion="reduced"] .flip-back,
+  [data-motion="none"] .flip-back {
+    transform: none;
+    visibility: hidden;
+  }
+  [data-motion="reduced"] .flip-card[data-flipped="true"] .flip-back,
+  [data-motion="none"] .flip-card[data-flipped="true"] .flip-back {
+    visibility: visible;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flip-card[data-flipped="true"] {
+      transform: none;
+    }
+    .flip-card[data-flipped="true"] .flip-front {
+      visibility: hidden;
+    }
+    .flip-back {
+      transform: none;
+      visibility: hidden;
+    }
+    .flip-card[data-flipped="true"] .flip-back {
+      visibility: visible;
+    }
+  }
+
+  /* Barre de progression qui se remplit (transform uniquement) */
+  .progress-fill {
+    transform-origin: left center;
+    transition: transform var(--dur-slow) var(--ease-calm);
+  }
+
+  /* Mode focus : tout est masqué sauf la carte */
+  [data-focus-mode="true"] .hide-in-focus {
+    display: none !important;
+  }
+}

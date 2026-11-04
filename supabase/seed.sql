@@ -1,0 +1,1 @@
+-- Jeu de démo : voir supabase/seed.sql (rempli en phase 2)

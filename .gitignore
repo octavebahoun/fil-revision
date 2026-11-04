@@ -1,0 +1,41 @@
+# secrets
+.env
+.env*.local
+!.env.example
+
+# cours de l'école : jamais commités
+cours/
+*.pdf
+*.pptx
+*.docx
+!tests/fixtures/**/*.pdf
+!tests/fixtures/**/*.pptx
+!tests/fixtures/**/*.docx
+
+# deps / build
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# tests
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+artifacts/
+
+# supabase
+supabase/.branches
+supabase/.temp
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.pnpm-debug.log*
+.env.localstack
