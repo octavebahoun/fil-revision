@@ -1,0 +1,16 @@
+# Jamais envoyé à Vercel : secrets, cours de l'école, artefacts locaux.
+.env
+.env.*
+!.env.example
+*.pdf
+*.pptx
+*.docx
+cours/
+supabase/.temp
+supabase/.branches
+.next
+node_modules
+coverage
+test-results
+playwright-report
+blob-report
