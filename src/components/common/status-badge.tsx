@@ -4,6 +4,7 @@ const LABELS: Record<string, { label: string; tone: "wait" | "ok" | "warn" }> = 
   uploaded: { label: "En attente", tone: "wait" },
   extracting: { label: "Lecture du fichier", tone: "wait" },
   segmenting: { label: "Découpage en notions", tone: "wait" },
+  awaiting_confirmation: { label: "À confirmer", tone: "warn" },
   generating: { label: "Préparation des cartes", tone: "wait" },
   ready: { label: "Prêt", tone: "ok" },
   error: { label: "À vérifier", tone: "warn" },

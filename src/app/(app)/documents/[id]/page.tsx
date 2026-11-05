@@ -9,7 +9,9 @@ import { MoreDetails } from "@/components/common/more-details";
 import { LiveStatus } from "@/components/courses/live-status";
 import { DocumentAdmin } from "@/components/courses/document-admin";
 import { Button } from "@/components/ui/button";
-import { retryDocumentAction } from "@/lib/courses/actions";
+import { confirmGenerationAction, retryDocumentAction } from "@/lib/courses/actions";
+import { formatUsd } from "@/lib/ai/estimate";
+import { SubmitButton } from "@/components/common/submit-button";
 import { z } from "zod";
 
 export const metadata: Metadata = { title: "Cours" };
@@ -20,7 +22,7 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[id
   const { supabase } = await requireUser();
   const { data: doc } = await supabase
     .from("documents")
-    .select("id, title, status, error_message, kind, page_count, filename, subjects(name, slug)")
+    .select("id, title, status, error_message, kind, page_count, filename, estimated_cost_usd, subjects(name, slug)")
     .eq("id", id)
     .maybeSingle();
   if (!doc) notFound();
@@ -36,6 +38,7 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[id
     error: notions?.filter((n) => n.status === "error").length ?? 0,
   };
   const retry = retryDocumentAction.bind(null, doc.id);
+  const confirm = confirmGenerationAction.bind(null, doc.id);
 
   return (
     <>
@@ -59,6 +62,20 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[id
             notions: counts,
           }}
         />
+        {doc.status === "awaiting_confirmation" ? (
+          <form action={confirm} className="flex flex-col gap-3 rounded-3xl border bg-card p-5">
+            <p>
+              Préparer les fiches et les cartes de ce cours coûtera environ{" "}
+              <strong>{formatUsd(Number(doc.estimated_cost_usd ?? 0))}</strong> d&apos;IA.
+            </p>
+            <p className="text-muted-foreground">
+              Le plafond quotidien reste actif : au-delà, la suite reprend demain.
+            </p>
+            <SubmitButton size="lg" pendingLabel="C'est parti…">
+              Lancer la préparation
+            </SubmitButton>
+          </form>
+        ) : null}
         {doc.status === "error" || counts.error > 0 ? (
           <form action={retry}>
             <Button type="submit" variant="outline">

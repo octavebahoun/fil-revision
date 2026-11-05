@@ -125,14 +125,14 @@ isOneToOne: false
                   ]
                 },"documents": {
                   Row: {
-                    "created_at": string,"error_message": string | null,"filename": string,"id": string,"kind": string,"language": string,"mime": string,"origin": string,"page_count": number | null,"sha256": string,"size_bytes": number,"status": string,"storage_path": string | null,"subject_id": string,"title": string,"updated_at": string,"user_id": string
+                    "created_at": string,"error_message": string | null,"estimated_cost_usd": number | null,"filename": string,"id": string,"kind": string,"language": string,"mime": string,"origin": string,"page_count": number | null,"sha256": string,"size_bytes": number,"status": string,"storage_path": string | null,"subject_id": string,"title": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"error_message"?: string | null,"filename": string,"id"?: string,"kind"?: string,"language"?: string,"mime": string,"origin"?: string,"page_count"?: number | null,"sha256": string,"size_bytes": number,"status"?: string,"storage_path"?: string | null,"subject_id": string,"title": string,"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"error_message"?: string | null,"estimated_cost_usd"?: number | null,"filename": string,"id"?: string,"kind"?: string,"language"?: string,"mime": string,"origin"?: string,"page_count"?: number | null,"sha256": string,"size_bytes": number,"status"?: string,"storage_path"?: string | null,"subject_id": string,"title": string,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "created_at"?: string,"error_message"?: string | null,"filename"?: string,"id"?: string,"kind"?: string,"language"?: string,"mime"?: string,"origin"?: string,"page_count"?: number | null,"sha256"?: string,"size_bytes"?: number,"status"?: string,"storage_path"?: string | null,"subject_id"?: string,"title"?: string,"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"error_message"?: string | null,"estimated_cost_usd"?: number | null,"filename"?: string,"id"?: string,"kind"?: string,"language"?: string,"mime"?: string,"origin"?: string,"page_count"?: number | null,"sha256"?: string,"size_bytes"?: number,"status"?: string,"storage_path"?: string | null,"subject_id"?: string,"title"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {

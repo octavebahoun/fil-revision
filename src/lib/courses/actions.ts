@@ -8,6 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { ACCEPTED_EXTENSIONS, MAX_FILE_BYTES, MIME, extensionOf, type FileKind } from "@/lib/ingest/filetype";
 import { titleFromFilename } from "@/lib/ingest/classify";
 import { enqueueJob, requeueJob } from "@/lib/jobs/queue";
+import { enqueueGeneration } from "@/lib/jobs/plan";
 import { runWorker } from "@/lib/jobs/run";
 import { slugify } from "@/lib/text/normalize";
 import { log } from "@/lib/log";
@@ -181,4 +182,18 @@ export async function signedSourceUrlAction(documentId: string): Promise<string 
   if (!doc?.storage_path) return null;
   const { data } = await supabase.storage.from("documents").createSignedUrl(doc.storage_path, 300);
   return data?.signedUrl ?? null;
+}
+
+/** Confirmation explicite d'une génération dont le coût estimé dépassait le seuil. */
+export async function confirmGenerationAction(documentId: string) {
+  const { user, supabase } = await requireUser();
+  const { data: doc } = await supabase
+    .from("documents")
+    .select("id, status")
+    .eq("id", z.uuid().parse(documentId))
+    .maybeSingle();
+  if (!doc || doc.status !== "awaiting_confirmation") return;
+  await enqueueGeneration(createAdminClient(), user.id, doc.id);
+  after(() => runWorker({ userId: user.id, budgetMs: 200_000 }).then(() => undefined));
+  revalidatePath(`/documents/${doc.id}`);
 }

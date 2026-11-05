@@ -3,7 +3,8 @@
  * - une sous-dossier = une matière (les dossiers vides deviennent des matières à venir) ;
  * - idempotent : un fichier déjà importé (même empreinte SHA-256) est ignoré, un nouveau est détecté ;
  * - le dossier source n'est jamais modifié (lecture seule) ;
- * - traite ensuite les jobs (extraction, notions, génération) jusqu'au bout, sauf --no-wait.
+ * - traite ensuite les jobs (extraction, notions, génération) jusqu'au bout, sauf --no-wait ;
+ * - un cours dont la préparation dépasse le seuil de coût attend une confirmation : --yes la donne.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -16,6 +17,7 @@ const args = process.argv.slice(2);
 const root = args.find((a) => !a.startsWith("--") && args[args.indexOf(a) - 1] !== "--email");
 const emailArg = args.includes("--email") ? args[args.indexOf("--email") + 1] : undefined;
 const wait = !args.includes("--no-wait");
+const yes = args.includes("--yes");
 
 if (!root || !existsSync(root) || !statSync(root).isDirectory()) {
   console.error("Usage : pnpm import:cours <dossier> [--email adresse] [--prod] [--no-wait]");
@@ -73,6 +75,7 @@ for (const [i, s] of plan.entries()) {
       filename: path.basename(f),
       bytes,
       origin: "import",
+      autoConfirm: yes,
     });
     if (res.status === "created") {
       created++;
@@ -97,7 +100,8 @@ if (wait) {
   const e = process.env;
   const providers = buildProviders(e as Record<string, string>);
   const ai = new AiRouter(providers, supabaseAiStore, Number(e.AI_DAILY_BUDGET_USD ?? 2));
-  const ctx = { db: db as never, ai, now: () => new Date() };
+  const { jobConfigFromEnv } = await import("../src/lib/jobs/types");
+  const ctx = { db: db as never, ai, now: () => new Date(), config: jobConfigFromEnv(e) };
   console.log(`\nTraitement (${providers.map((p) => p.name).join(" → ")})…`);
   const started = Date.now();
   for (;;) {
@@ -122,6 +126,24 @@ if (wait) {
       `  ${r.steps} étape(s) · reste ${left ?? 0} prêt(s), ${paused ?? 0} en attente · ${Math.round((Date.now() - started) / 1000)} s`,
     );
     if (r.idle && (left ?? 0) === 0) {
+      // Cours en attente de confirmation (estimation au-dessus du seuil).
+      const { data: waiting } = await db
+        .from("documents")
+        .select("id, title, estimated_cost_usd")
+        .eq("user_id", user.id)
+        .eq("status", "awaiting_confirmation");
+      if (waiting?.length && yes) {
+        const { enqueueGeneration } = await import("../src/lib/jobs/plan");
+        for (const d of waiting) await enqueueGeneration(db as never, user.id, d.id);
+        console.log(`Génération confirmée pour ${waiting.length} cours.`);
+        continue;
+      }
+      if (waiting?.length) {
+        const total = waiting.reduce((s, d) => s + Number(d.estimated_cost_usd ?? 0), 0);
+        console.log("\nEstimation avant génération :");
+        for (const d of waiting) console.log(`  ~${Number(d.estimated_cost_usd ?? 0).toFixed(3)} $  ${d.title}`);
+        console.log(`  Total ~${total.toFixed(2)} $. Pour lancer : relance la même commande avec --yes.`);
+      }
       if ((paused ?? 0) > 0)
         console.log("Certains traitements reprendront plus tard (nouvel essai ou budget du jour atteint).");
       break;

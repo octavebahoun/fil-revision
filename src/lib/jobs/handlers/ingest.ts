@@ -16,9 +16,11 @@ import {
   type PageText,
 } from "@/lib/ai/tasks/segment";
 import { enqueueJob } from "../queue";
+import { enqueueGeneration } from "../plan";
+import { estimateDocumentCostUsd } from "@/lib/ai/estimate";
 import { JobFatal, type JobContext, type JobHandler, type JobRow, type StepResult } from "../types";
 
-type Payload = { documentId: string; window?: number };
+type Payload = { documentId: string; window?: number; autoConfirm?: boolean };
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const GENERIC_TITLE = /^(cours ?slides?|polyc(opi[ée])?|diapos?|slides?|support|cours|document|notes?)$/i;
@@ -202,26 +204,24 @@ async function stepPlan(ctx: JobContext, job: JobRow): Promise<StepResult> {
     await ctx.db.from("documents").update({ status: "generating" }).eq("id", doc.id);
     return { kind: "done" };
   }
-  const { data: notions, error } = await ctx.db
-    .from("notions")
-    .select("id, content_hash, status")
-    .eq("document_id", doc.id)
-    .order("position");
+  const { data: notions, error } = await ctx.db.from("notions").select("source_text, status").eq("document_id", doc.id);
   if (error) throw error;
   const todo = (notions ?? []).filter((n) => n.status !== "ready");
-  for (const n of todo) {
-    await enqueueJob(ctx.db, {
-      userId: job.user_id,
-      type: "generate_notion",
-      payload: { notionId: n.id },
-      dedupeKey: `gen:${n.id}:${n.content_hash}`,
-      total: 4,
-    });
-  }
+  // Estimation avant une génération massive : au-delà du seuil, on attend ta confirmation.
+  const estimate = estimateDocumentCostUsd(
+    todo.map((n) => n.source_text.length),
+    ctx.config.models,
+  );
   await ctx.db
     .from("documents")
-    .update({ status: todo.length ? "generating" : "ready" })
+    .update({ estimated_cost_usd: Number(estimate.toFixed(4)) })
     .eq("id", doc.id);
+  const autoConfirm = (job.payload as Payload).autoConfirm === true;
+  if (todo.length && !autoConfirm && estimate > ctx.config.confirmThresholdUsd) {
+    await ctx.db.from("documents").update({ status: "awaiting_confirmation" }).eq("id", doc.id);
+    return { kind: "done" };
+  }
+  await enqueueGeneration(ctx.db, job.user_id, doc.id);
   return { kind: "done" };
 }
 

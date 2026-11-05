@@ -17,7 +17,25 @@ export type StepResult =
   | { kind: "done"; progress?: number; total?: number }
   | { kind: "fail"; message: string };
 
-export type JobContext = { db: AdminSupabase; ai: AiRouter; now: () => Date };
+export type JobConfig = {
+  /** Au-delà de ce coût estimé, la génération d'un document attend une confirmation. */
+  confirmThresholdUsd: number;
+  models: { main: string; light: string };
+};
+
+export type JobContext = { db: AdminSupabase; ai: AiRouter; now: () => Date; config: JobConfig };
+
+export function jobConfigFromEnv(e: Record<string, string | undefined>): JobConfig {
+  const mock = e.AI_PRIMARY_PROVIDER === "mock";
+  return {
+    confirmThresholdUsd: Number(e.AI_CONFIRM_THRESHOLD_USD ?? 0.3),
+    models: mock
+      ? { main: "mock", light: "mock" }
+      : e.AI_PRIMARY_PROVIDER === "meta"
+        ? { main: e.META_MODEL ?? "muse-spark-1.3-contributor", light: e.META_MODEL ?? "muse-spark-1.3-contributor" }
+        : { main: e.DEEPSEEK_MODEL ?? "deepseek-v4-pro", light: e.DEEPSEEK_LIGHT_MODEL ?? "deepseek-flash" },
+  };
+}
 
 export type JobHandler = {
   run(job: JobRow, ctx: JobContext): Promise<StepResult>;

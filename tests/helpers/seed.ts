@@ -25,16 +25,14 @@ export async function seedDeck(db: SupabaseClient, userId: string, opts: { notio
     })
     .select("id")
     .single();
-  await db
-    .from("document_pages")
-    .insert(
-      [1, 2, 3].map((n) => ({
-        user_id: userId,
-        document_id: doc!.id,
-        page_number: n,
-        text: `Page ${n} : une clé primaire identifie chaque ligne.`,
-      })),
-    );
+  await db.from("document_pages").insert(
+    [1, 2, 3].map((n) => ({
+      user_id: userId,
+      document_id: doc!.id,
+      page_number: n,
+      text: `Page ${n} : une clé primaire identifie chaque ligne.`,
+    })),
+  );
   const notions: string[] = [];
   const cards: { id: string; type: string; notionId: string }[] = [];
   for (let i = 0; i < (opts.notions ?? 3); i++) {

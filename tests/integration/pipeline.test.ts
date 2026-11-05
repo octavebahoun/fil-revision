@@ -17,7 +17,12 @@ import { COURSE_PAGES, TRAP_PAGES, makePdf, makePptx } from "../helpers/fixtures
 let user: TestUser;
 let subjectId: string;
 const db = createAdminClient();
-const ctx = { db, ai: new AiRouter([createMockProvider()], supabaseAiStore, 2), now: () => new Date() };
+const ctx = {
+  db,
+  ai: new AiRouter([createMockProvider()], supabaseAiStore, 2),
+  now: () => new Date(),
+  config: { confirmThresholdUsd: 0.3, models: { main: "mock", light: "mock" } },
+};
 
 async function drain(opts: { fastForward?: boolean } = {}) {
   for (let i = 0; i < 60; i++) {

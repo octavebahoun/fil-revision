@@ -22,6 +22,8 @@ export async function registerFile(
     filename: string;
     bytes: Uint8Array;
     origin: "import" | "upload" | "demo";
+    /** Génère sans attendre de confirmation, même si l'estimation dépasse le seuil. */
+    autoConfirm?: boolean;
   },
 ): Promise<RegisterResult> {
   let kind;
@@ -65,7 +67,7 @@ export async function registerFile(
   await enqueueJob(db, {
     userId: args.userId,
     type: "ingest_document",
-    payload: { documentId: doc.id },
+    payload: { documentId: doc.id, autoConfirm: args.autoConfirm === true },
     dedupeKey: `ingest:${doc.id}`,
   });
   return { status: "created", documentId: doc.id };
