@@ -143,6 +143,26 @@ isOneToOne: false
       referencedColumns: ["id","user_id"]
     }
                   ]
+                },"exams": {
+                  Row: {
+                    "created_at": string,"exam_date": string,"id": string,"subject_id": string,"title": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"exam_date": string,"id"?: string,"subject_id": string,"title": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"exam_date"?: string,"id"?: string,"subject_id"?: string,"title"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exams_subject_id_user_id_fkey"
+      columns: ["subject_id","user_id"]
+isOneToOne: false
+      referencedRelation: "subjects"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 },"jobs": {
                   Row: {
                     "attempts": number,"created_at": string,"dedupe_key": string | null,"id": string,"last_error": string | null,"locked_until": string | null,"max_attempts": number,"payload": NonNullable<Json>,"progress": number,"run_after": string,"status": string,"step": string,"total": number,"type": string,"updated_at": string,"user_id": string
@@ -333,6 +353,36 @@ isOneToOne: false
                            },
 "rate_limit_hit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"review_due_cards":
+{ Args: { "p_limit"?: number,"p_notion"?: string,"p_subject"?: string }; Returns: {
+              "card_id": string,"due": string,"notion_id": string,"stability": number,"state": number,"subject_id": string,"type": string
+            }[]
+                           },
+"review_easy_cards":
+{ Args: { "p_limit"?: number,"p_subject"?: string }; Returns: {
+              "card_id": string,"notion_id": string,"subject_id": string,"type": string
+            }[]
+                           },
+"review_new_notions":
+{ Args: { "p_limit"?: number,"p_subject"?: string }; Returns: {
+              "document_id": string,"fiche_id": string,"notion_id": string,"subject_id": string,"title": string
+            }[]
+                           },
+"study_days":
+{ Args: { "p_since": string }; Returns: {
+              "day": string
+            }[]
+                           },
+"subject_mastery":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "due": number,"known": number,"subject_id": string,"total": number
+            }[]
+                           },
+"subject_overview":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "documents": number,"notions": number,"processing": number,"subject_id": string
+            }[]
                            }
           }
           Enums: {

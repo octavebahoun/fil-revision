@@ -54,7 +54,7 @@ export default async function MatierePage({ params }: PageProps<"/matieres/[slug
       />
       {hasNotions ? (
         <Button asChild size="lg" className="mb-8 w-full sm:w-auto">
-          <Link href={`/session/nouvelle?matiere=${slug}`}>
+          <Link href={`/reviser?matiere=${slug}`}>
             <Play aria-hidden="true" /> Réviser cette matière
           </Link>
         </Button>

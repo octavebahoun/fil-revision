@@ -12,49 +12,31 @@ export type SubjectSummary = {
   mastery: number | null;
 };
 
-/** Maîtrise d'une matière : part des cartes révisables « acquises » (état FSRS Révision, non en retard). */
+/** Maîtrise d'une matière : part des cartes révisables « acquises » (calcul en base, sans limite de lignes). */
 export async function masteryBySubject(supabase: ServerSupabase): Promise<Map<string, number>> {
-  const { data: cards } = await supabase
-    .from("cards")
-    .select("id, subject_id, type, card_states(state, due, stability)")
-    .eq("status", "active")
-    .neq("type", "fiche")
-    .neq("type", "code_exercise");
-  const total = new Map<string, number>();
-  const known = new Map<string, number>();
-  const now = Date.now();
-  for (const c of cards ?? []) {
-    total.set(c.subject_id, (total.get(c.subject_id) ?? 0) + 1);
-    const st = (c.card_states as unknown as { state: number; due: string; stability: number } | null) ?? null;
-    if (st && st.state === 2 && (new Date(st.due).getTime() > now || st.stability >= 3)) {
-      known.set(c.subject_id, (known.get(c.subject_id) ?? 0) + 1);
-    }
-  }
+  const { data } = await supabase.rpc("subject_mastery");
   const out = new Map<string, number>();
-  for (const [id, n] of total) out.set(id, Math.round(((known.get(id) ?? 0) / n) * 100));
+  for (const r of data ?? []) if (r.total > 0) out.set(r.subject_id, Math.round((r.known / r.total) * 100));
   return out;
 }
 
 export async function listSubjects(supabase: ServerSupabase): Promise<SubjectSummary[]> {
-  const [{ data: subjects }, { data: docs }, { data: notions }, mastery] = await Promise.all([
+  const [{ data: subjects }, { data: overview }, mastery] = await Promise.all([
     supabase.from("subjects").select("id, name, slug, kind, position").order("position").order("name"),
-    supabase.from("documents").select("subject_id, status"),
-    supabase.from("notions").select("subject_id").eq("status", "ready"),
+    supabase.rpc("subject_overview"),
     masteryBySubject(supabase),
   ]);
-  return (subjects ?? []).map((s) => {
-    const d = (docs ?? []).filter((x) => x.subject_id === s.id);
-    return {
-      id: s.id,
-      name: s.name,
-      slug: s.slug,
-      kind: s.kind,
-      documents: d.length,
-      processing: d.filter((x) => ["uploaded", "extracting", "segmenting", "generating"].includes(x.status)).length,
-      notions: (notions ?? []).filter((n) => n.subject_id === s.id).length,
-      mastery: mastery.has(s.id) ? mastery.get(s.id)! : null,
-    };
-  });
+  const ov = new Map((overview ?? []).map((o) => [o.subject_id, o]));
+  return (subjects ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    slug: s.slug,
+    kind: s.kind,
+    documents: ov.get(s.id)?.documents ?? 0,
+    processing: ov.get(s.id)?.processing ?? 0,
+    notions: ov.get(s.id)?.notions ?? 0,
+    mastery: mastery.has(s.id) ? mastery.get(s.id)! : null,
+  }));
 }
 
 export function pagesLabel(pages: number[]): string {

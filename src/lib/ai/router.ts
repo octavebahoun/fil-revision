@@ -96,18 +96,26 @@ export class AiRouter {
           const res = await provider.chat(req);
           const cost = costUsd(res.model, res.usage.promptTokens, res.usage.completionTokens);
           let data: T;
+          // Code d'erreur précis (chemin + type), sans aucun contenu de cours.
+          let schemaCode = "schema:json";
           try {
             const parsed = opts.schema.safeParse(extractJson(res.text));
-            if (!parsed.success)
+            if (!parsed.success) {
+              const first = parsed.error.issues[0];
+              schemaCode = `schema:${first?.path.join(".") ?? ""}:${first?.code ?? ""}`.slice(0, 80);
               throw new Error(
                 parsed.error.issues
                   .slice(0, 3)
                   .map((i) => `${i.path.join(".")}: ${i.message}`)
                   .join("; "),
               );
+            }
             data = parsed.data;
             const problem = opts.check?.(data);
-            if (problem) throw new Error(problem);
+            if (problem) {
+              schemaCode = "schema:check";
+              throw new Error(problem);
+            }
           } catch (err) {
             await this.store.logCall({
               userId: opts.userId,
@@ -117,7 +125,7 @@ export class AiRouter {
               ...res.usage,
               costUsd: cost,
               ok: false,
-              errorCode: "schema",
+              errorCode: schemaCode,
               latencyMs: res.latencyMs,
             });
             lastError = new AiError("Sortie hors schéma", "schema", true);

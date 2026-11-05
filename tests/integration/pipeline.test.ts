@@ -116,14 +116,12 @@ describe("pipeline d'ingestion", () => {
       sourceText: n!.source_text,
       language: "fr",
     });
-    const up = await db
-      .from("ai_cache")
-      .upsert({
-        user_id: user.id,
-        key: `fiche:${GEN_VERSION}:${n!.content_hash}:0`,
-        purpose: "generate_fiche",
-        output: real as never,
-      });
+    const up = await db.from("ai_cache").upsert({
+      user_id: user.id,
+      key: `fiche:${GEN_VERSION}:${n!.content_hash}:0`,
+      purpose: "generate_fiche",
+      output: real as never,
+    });
     expect(up.error).toBeNull();
     const countFiche = async () =>
       (
@@ -279,6 +277,6 @@ describe("injection de prompt (PDF piégé)", () => {
       .eq("user_id", user.id)
       .eq("purpose", "generate_quiz")
       .eq("ok", false);
-    expect((calls ?? []).some((c) => c.error_code === "schema")).toBe(true);
+    expect((calls ?? []).some((c) => (c.error_code ?? "").startsWith("schema"))).toBe(true);
   });
 });

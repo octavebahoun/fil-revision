@@ -2,9 +2,18 @@ import { z } from "zod";
 import { quoteSupported } from "@/lib/text/normalize";
 import { UNTRUSTED_RULES, makeBoundary, wrapUntrusted } from "../untrusted";
 
+// Tolérant sur la forme (id numérique, booléen en texte, raison longue), strict sur le fond.
 export const VerifyOutput = z.object({
   verdicts: z.array(
-    z.object({ id: z.string(), supported: z.boolean(), reason: z.string().max(300).optional().default("") }),
+    z.object({
+      id: z.union([z.string(), z.number()]).transform(String),
+      supported: z.union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")]),
+      reason: z
+        .string()
+        .optional()
+        .default("")
+        .transform((r) => r.slice(0, 300)),
+    }),
   ),
 });
 export type VerifyOutput = z.infer<typeof VerifyOutput>;

@@ -186,7 +186,7 @@ async function stepVerify(ctx: JobContext, job: JobRow): Promise<StepResult> {
         schema: VerifyOutput,
         system: prompt.system,
         user: prompt.user,
-        maxTokens: 4000,
+        maxTokens: 9000,
         temperature: 0,
         mock: () => mockVerify(kept, n.source_text),
       });

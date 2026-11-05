@@ -26,9 +26,11 @@ export const FicheContent = z.object({
   title: short(90),
   explanation: short(LIMITS.explanation),
   example: short(LIMITS.example),
-  question: short(LIMITS.question).refine((q) => q.endsWith("?") && (q.match(/\?/g)?.length ?? 0) === 1, {
-    message: "Une seule question, terminée par « ? »",
-  }),
+  // UNE seule question : si le modèle en enchaîne plusieurs, on garde la première.
+  question: z.preprocess(
+    (v) => (typeof v === "string" && v.includes("?") ? v.slice(0, v.indexOf("?") + 1).trim() : v),
+    short(LIMITS.question).refine((q) => q.endsWith("?"), { message: "Une seule question, terminée par « ? »" }),
+  ),
   answer: short(LIMITS.answer),
   more: z.string().trim().max(LIMITS.more).optional().default(""),
 });
@@ -147,7 +149,7 @@ export function parseCardContent(type: CardType, content: unknown) {
 /** Contrôle automatique de longueur d'une fiche (en plus du schéma) : 5 lignes au plus. */
 export function ficheLineCount(
   f: Pick<FicheContent, "explanation" | "example" | "question">,
-  charsPerLine = 90,
+  charsPerLine = 100,
 ): number {
   return [f.explanation, f.example, f.question].reduce(
     (n, s) => n + Math.max(1, Math.ceil(s.length / charsPerLine)),

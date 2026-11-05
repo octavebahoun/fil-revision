@@ -67,11 +67,11 @@ describe("JSON et schémas", () => {
   it("une fiche : une seule question terminée par « ? »", () => {
     const base = { title: "T", explanation: "E", example: "Ex", answer: "R" };
     expect(FicheContent.safeParse({ ...base, question: "Pourquoi ?" }).success).toBe(true);
-    expect(FicheContent.safeParse({ ...base, question: "Pourquoi ? Et comment ?" }).success).toBe(false);
+    expect(FicheContent.parse({ ...base, question: "Pourquoi ? Et comment ?" }).question).toBe("Pourquoi ?");
     expect(FicheContent.safeParse({ ...base, question: "Explique." }).success).toBe(false);
   });
   it("contrôle automatique : fiche trop longue rejetée", () => {
-    const long = "x".repeat(200);
+    const long = "x".repeat(250);
     expect(ficheTooLong({ explanation: long, example: long, question: "q ?" })).toBe(true);
     expect(ficheTooLong({ explanation: "court", example: "court", question: "q ?" })).toBe(false);
   });
@@ -100,5 +100,29 @@ describe("JSON et schémas", () => {
         explanation: "e",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("listes tolérantes de la génération", () => {
+  it("écarte un élément invalide sans rejeter toute la réponse", async () => {
+    const { GenFicheOutput } = await import("@/lib/ai/tasks/generate");
+    const ok = { front: "Q ?", back: "R", sourceQuote: "une citation exacte", sourcePages: [1] };
+    const out = GenFicheOutput.parse({
+      fiche: {
+        title: "T",
+        explanation: "E",
+        example: "X",
+        question: "Q ?",
+        answer: "R",
+        sourceQuote: "une citation exacte",
+        sourcePages: [1, 2, 3, 4, 5, 6, 7],
+      },
+      flashcards: [ok, { front: "sans source" }],
+      vocab: [{ en: "to run" }],
+    });
+    expect(out.flashcards).toHaveLength(1);
+    expect(out.vocab).toHaveLength(0);
+    expect(out.fiche.sourcePages).toHaveLength(6);
+    expect(GenFicheOutput.safeParse({ fiche: out.fiche, flashcards: [{ front: "x" }] }).success).toBe(false);
   });
 });

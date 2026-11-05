@@ -17,16 +17,43 @@ import { sentences, truncateWords } from "@/lib/text/normalize";
 import { UNTRUSTED_RULES, makeBoundary, wrapUntrusted } from "../untrusted";
 import { STYLE_RULES } from "./style";
 
+// Une citation trop longue est tronquée (le début reste une citation exacte) plutôt que refusée.
 const Source = z.object({
-  sourceQuote: z.string().trim().min(8).max(LIMITS.quote),
-  sourcePages: z.array(z.number().int().positive()).min(1).max(6),
+  sourceQuote: z
+    .string()
+    .trim()
+    .min(8)
+    .transform((q) => q.slice(0, LIMITS.quote)),
+  sourcePages: z
+    .array(z.number().int().positive())
+    .min(1)
+    .transform((p) => p.slice(0, 6)),
 });
+
+/**
+ * Liste tolérante : un élément mal formé est écarté (il ne sera simplement pas enregistré)
+ * au lieu de faire rejeter toute la réponse. La liste doit garder au moins `min` éléments valides.
+ */
+export function lenientArray<T extends z.ZodType>(schema: T, min: number, max: number) {
+  return z
+    .array(z.unknown())
+    .max(30)
+    .transform((arr) =>
+      arr
+        .flatMap((x) => {
+          const r = schema.safeParse(x);
+          return r.success ? [r.data as z.output<T>] : [];
+        })
+        .slice(0, max),
+    )
+    .refine((arr) => arr.length >= min, { message: `Au moins ${min} élément(s) valide(s)` });
+}
 
 export const GenFicheOutput = z.object({
   fiche: FicheContent.and(Source),
-  flashcards: z.array(FlashcardContent.and(Source)).min(1).max(5),
-  vocab: z.array(VocabContent.and(Source)).max(8).optional().default([]),
-  phrases: z.array(PhraseContent.and(Source)).max(5).optional().default([]),
+  flashcards: lenientArray(FlashcardContent.and(Source), 1, 5),
+  vocab: lenientArray(VocabContent.and(Source), 0, 8).optional().default([]),
+  phrases: lenientArray(PhraseContent.and(Source), 0, 5).optional().default([]),
 });
 export type GenFicheOutput = z.infer<typeof GenFicheOutput>;
 
@@ -45,7 +72,7 @@ export const QuizItem = z.union([
   withType("association", AssociationContent),
 ]);
 export type QuizItem = z.infer<typeof QuizItem>;
-export const GenQuizOutput = z.object({ quiz: z.array(QuizItem).min(2).max(6) });
+export const GenQuizOutput = z.object({ quiz: lenientArray(QuizItem, 2, 6) });
 export type GenQuizOutput = z.infer<typeof GenQuizOutput>;
 
 export type NotionInput = {
@@ -121,8 +148,9 @@ Format JSON exact : {"quiz": [{"type": "qcm", "question": "", "choices": ["", ""
 }
 
 export function ficheCheck(out: GenFicheOutput): string | null {
-  if (ficheTooLong(out.fiche)) return "La fiche dépasse 5 lignes : raccourcis l'explication et l'exemple.";
-  return null;
+  if (!ficheTooLong(out.fiche)) return null;
+  const f = out.fiche;
+  return `La fiche dépasse 5 lignes. Longueurs actuelles : explanation ${f.explanation.length} (max ${LIMITS.explanation}), example ${f.example.length} (max ${LIMITS.example}), question ${f.question.length} (max ${LIMITS.question}) caractères. Raccourcis.`;
 }
 
 /** Phrases du texte source (sans les repères [p. N]) avec leur page. */

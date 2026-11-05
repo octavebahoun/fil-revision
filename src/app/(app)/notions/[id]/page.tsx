@@ -58,7 +58,7 @@ export default async function NotionPage({ params }: PageProps<"/notions/[id]">)
         )}
         {others.length ? (
           <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href={`/session/nouvelle?notion=${notion.id}`}>
+            <Link href={`/reviser?notion=${notion.id}`}>
               <Play aria-hidden="true" /> Réviser cette notion
             </Link>
           </Button>

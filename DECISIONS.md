@@ -28,3 +28,6 @@ Chaque choix, avec sa raison en une ou deux lignes. Les plus récentes en bas de
 - **Thème** posé côté serveur depuis un cookie d'affichage (`fil_prefs`) + petit script `head` pour le thème « système » : aucun flash clair→sombre au chargement (important pour la photosensibilité).
 - **Mouvement** : réglage « normales / réduites / aucune ». `prefers-reduced-motion` force au moins « réduites ». On n'anime que `transform` et `opacity`.
 - **Cibles tactiles** : boutons shadcn redimensionnés à 44 px minimum (`min-h-11`), champs à 48 px et police 16 px (pas de zoom iOS).
+
+## Ressources de la machine
+- **Mode léger** (demande de l'utilisateur, 2026-11-05) : PC partagé d'environ 7 Go de RAM. Supabase local sans Studio ni Realtime (le suivi en direct utilise du polling), un seul serveur Next à la fois, arrêté dès qu'il ne sert plus, Playwright à 1 worker.
