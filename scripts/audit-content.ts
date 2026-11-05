@@ -30,13 +30,14 @@ type Row = {
   type: string;
   content: Record<string, unknown>;
   source_quote: string | null;
+  document_id: string;
   notions: { title: string; source_text: string };
 };
 const rows: Row[] = [];
 for (let from = 0; ; from += 500) {
   const { data } = await db
     .from("cards")
-    .select("id, type, content, source_quote, notions!inner(title, source_text)")
+    .select("id, type, content, source_quote, document_id, notions!inner(title, source_text)")
     .eq("user_id", user.id)
     .eq("status", "active")
     .range(from, from + 499);
@@ -44,6 +45,12 @@ for (let from = 0; ; from += 500) {
   if (!data || data.length < 500) break;
 }
 const s = (v: unknown) => (typeof v === "string" ? v : "");
+// Comme le pipeline : noms propres et chiffres cherchés dans tout le document.
+const docText = new Map<string, string>();
+for (const id of new Set(rows.map((r) => r.document_id))) {
+  const { data } = await db.from("document_pages").select("text").eq("document_id", id).order("page_number");
+  docText.set(id, (data ?? []).map((d) => d.text).join("\n"));
+}
 const problems: string[] = [];
 for (const r of rows) {
   const c = r.content;
@@ -63,7 +70,7 @@ for (const r of rows) {
         : ["qcm", "vrai_faux", "reponse_courte", "code_trou", "ordre", "association"].includes(r.type)
           ? quizFacts({ type: r.type, ...c } as never)
           : "";
-  const missing = facts ? unsupportedFacts(facts, src) : [];
+  const missing = facts ? unsupportedFacts(facts, docText.get(r.document_id) || src) : [];
   if (missing.length) problems.push(`[fait absent : ${missing.slice(0, 3).join(", ")}] ${r.type} · ${r.notions.title}`);
 }
 console.log(`${rows.length} cartes actives contrôlées, ${problems.length} problème(s).`);

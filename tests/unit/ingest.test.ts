@@ -163,3 +163,24 @@ describe("arborescence → matières", () => {
     expect(plan.find((s) => s.name === "PHP et MySQL")?.files).toEqual(["PHP et MySQL/cours.pptx.pdf"]);
   });
 });
+
+describe("import : projets de code ignorés", () => {
+  it("garde les PDF, ignore venv, node_modules, LICENSE, README et les .txt d'un projet", () => {
+    const entries = [
+      { path: "UML", type: "dir" as const },
+      { path: "UML/diapos.pdf", type: "file" as const },
+      { path: "UML/notes.md", type: "file" as const },
+      { path: "UML/projet/manage.py", type: "file" as const },
+      { path: "UML/projet/templates/password_reset_subject.txt", type: "file" as const },
+      { path: "UML/projet/enonce.pdf", type: "file" as const },
+      { path: "UML/projet/venv/lib/site-packages/django/LICENSE.txt", type: "file" as const },
+      { path: "UML/projet/node_modules/x/README.md", type: "file" as const },
+      { path: "UML/LICENSE.txt", type: "file" as const },
+      { path: "UML/.cache/a.pdf", type: "file" as const },
+    ];
+    const files = planSubjects(entries)
+      .find((s) => s.name === "UML")!
+      .files.sort();
+    expect(files).toEqual(["UML/diapos.pdf", "UML/notes.md", "UML/projet/enonce.pdf"]);
+  });
+});

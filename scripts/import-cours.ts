@@ -24,7 +24,7 @@ if (!root || !existsSync(root) || !statSync(root).isDirectory()) {
   process.exit(1);
 }
 
-const { planSubjects } = await import("../src/lib/ingest/subjects");
+const { planSubjects, IGNORED_DIRS } = await import("../src/lib/ingest/subjects");
 const { registerFile, ensureSubject } = await import("../src/lib/courses/register");
 type Entry = { path: string; type: "file" | "dir" };
 
@@ -47,7 +47,8 @@ function walk(dir: string) {
     const rel = path.relative(root!, p);
     if (statSync(p).isDirectory()) {
       entries.push({ path: rel, type: "dir" });
-      walk(p);
+      // Les dépendances et environnements (venv, node_modules…) ne sont jamais parcourus.
+      if (!IGNORED_DIRS.test(name) && !name.startsWith(".")) walk(p);
     } else entries.push({ path: rel, type: "file" });
   }
 }
