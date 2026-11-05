@@ -297,7 +297,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_set_allowed_emails":
+            "admin_allow_email":
+{ Args: { "p_email": string }; Returns: undefined
+                           },
+"admin_set_allowed_emails":
 { Args: { "p_emails": (string)[] }; Returns: number
                            },
 "claim_jobs":
