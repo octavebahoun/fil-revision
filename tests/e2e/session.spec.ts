@@ -72,8 +72,9 @@ test.describe("Session de révision", () => {
     await page.getByLabel(/Quiz/).check();
     await page.getByRole("button", { name: "Commencer" }).click();
     await expect(page).toHaveURL(/\/session\//);
-    // Première question du mode quiz : la répondre faux.
+    // Première question du mode quiz : la répondre faux (on attend qu'elle soit affichée).
     const vf = page.getByRole("button", { name: "Faux", exact: true });
+    await expect(vf.or(page.getByRole("radio", { name: /Mauvaise A/ }))).toBeVisible();
     if (await vf.isVisible()) await vf.click();
     else {
       await page.getByRole("radio", { name: /Mauvaise A/ }).click();
