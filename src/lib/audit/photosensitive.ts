@@ -62,9 +62,30 @@ function durationMs(token: string): number | null {
 
 type Anim = { name: string; durationMs: number | null; iterations: number };
 
+/** Découpe aux virgules de premier niveau (pas celles de cubic-bezier(…) ou var(…, …)). */
+function splitTopLevel(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of value) {
+    if (ch === "(") depth++;
+    if (ch === ")") depth = Math.max(0, depth - 1);
+    if (ch === "," && depth === 0) {
+      parts.push(cur);
+      cur = "";
+    } else cur += ch;
+  }
+  parts.push(cur);
+  return parts;
+}
+
 function parseAnimationShorthand(value: string): Anim[] {
-  return value.split(",").map((part) => {
-    const tokens = part.trim().split(/\s+/);
+  return splitTopLevel(value).map((part) => {
+    const tokens = part
+      .trim()
+      .replace(/(cubic-bezier|steps)\([^)]*\)/g, "")
+      .split(/\s+/)
+      .filter(Boolean);
     let duration: number | null = null;
     let iterations = 1;
     let name = "";

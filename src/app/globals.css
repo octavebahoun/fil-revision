@@ -44,6 +44,11 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* Animations par défaut de Tailwind retirées (ping, bounce, pulse) : jamais utilisées ici. */
+  --animate-ping: initial;
+  --animate-bounce: initial;
+  --animate-pulse: initial;
+
   /* Mouvement : uniquement transform + opacity, jamais de boucle rapide. */
   --animate-card-in: card-in var(--dur-base) var(--ease-calm) both;
   --animate-fade-in: fade-in var(--dur-base) var(--ease-calm) both;

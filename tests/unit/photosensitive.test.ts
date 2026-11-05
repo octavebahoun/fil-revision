@@ -36,3 +36,12 @@ describe("audit photosensible", () => {
     expect(auditSource("a.tsx", `<div className="animate-card-in" />`)).toHaveLength(0);
   });
 });
+
+describe("analyse des déclarations complexes", () => {
+  it("cubic-bezier et var() avec virgules ne cassent pas l'analyse", () => {
+    const css = `@keyframes ping{75%,to{transform:scale(2);opacity:0}} :root{--animate-ping: ping 1s cubic-bezier(0, 0, .2, 1) infinite}`;
+    expect(auditCss("a.css", css)).toHaveLength(0);
+    const fast = `@keyframes f{to{opacity:0}} .x{animation: f 100ms cubic-bezier(0, 0, .2, 1) infinite}`;
+    expect(auditCss("a.css", fast)).toHaveLength(1);
+  });
+});

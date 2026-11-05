@@ -9,15 +9,15 @@ const OPTIONS = [5, 10, 15, 25] as const;
 export function DurationPicker() {
   const { settings, update } = useSettings();
   return (
-    <fieldset className="flex flex-wrap items-center justify-center gap-2">
+    <fieldset className="flex items-center justify-center gap-1.5 sm:gap-2">
       <legend className="sr-only">Durée de la session</legend>
-      <span className="text-base text-muted-foreground" aria-hidden="true">
+      <span className="hidden text-base text-muted-foreground sm:inline" aria-hidden="true">
         Durée :
       </span>
       {OPTIONS.map((m) => (
         <label
           key={m}
-          className={`inline-flex min-h-11 min-w-14 cursor-pointer items-center justify-center rounded-full border px-3 text-base has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-ring ${
+          className={`inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-2.5 text-base whitespace-nowrap has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-ring sm:px-3 ${
             settings.sessionMinutes === m
               ? "border-primary bg-secondary font-semibold text-secondary-foreground"
               : "border-input"

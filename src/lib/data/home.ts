@@ -19,22 +19,23 @@ export async function loadHome(db: ServerSupabase, userId: string): Promise<Home
   const [sess, mastery, fresh, profile, subjects, exams] = await Promise.all([
     db
       .from("study_sessions")
-      .select("id, position, items")
+      .select("id, position, items, stats")
       .eq("status", "active")
       .gte("updated_at", since)
       .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(5),
     db.rpc("subject_mastery"),
     db.rpc("review_new_notions", { p_limit: 200 }),
     db.from("profiles").select("streak").eq("user_id", userId).maybeSingle(),
     db.from("subjects").select("id, name, slug"),
     db.from("exams").select("title, exam_date, subjects(name)").gte("exam_date", today).order("exam_date").limit(1),
   ]);
-  const items = (sess.data?.items as SessionItem[] | undefined) ?? [];
+  // Le pack hors ligne préparé en arrière-plan n'est proposé à la reprise que s'il a été commencé.
+  const started = (sess.data ?? []).find((s) => s.position > 0 || !(s.stats as { pack?: string } | null)?.pack);
+  const items = (started?.items as SessionItem[] | undefined) ?? [];
   const active =
-    sess.data && sess.data.position < items.length
-      ? { id: sess.data.id, position: sess.data.position, total: items.length }
+    started && started.position < items.length
+      ? { id: started.id, position: started.position, total: items.length }
       : null;
   const m = mastery.data ?? [];
   const names = new Map((subjects.data ?? []).map((s) => [s.id, s]));
