@@ -5,9 +5,11 @@ import { z } from "zod";
  * Limites de longueur = règle « 5 lignes max sur mobile » (≈ 40 caractères par ligne).
  */
 export const LIMITS = {
-  explanation: 220,
-  example: 220,
-  question: 150,
+  // Fiche = 5 lignes de 100 caractères : 2 (explication) + 2 (exemple) + 1 (question).
+  // Sur mobile (~40 caractères par ligne), chaque bloc reste sous 5 lignes.
+  explanation: 200,
+  example: 200,
+  question: 100,
   answer: 300,
   more: 700,
   front: 160,

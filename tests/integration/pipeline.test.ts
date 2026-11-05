@@ -8,6 +8,8 @@ import { registerFile, ensureSubject } from "@/lib/courses/register";
 import { processJobs } from "@/lib/jobs/worker";
 import { AiRouter } from "@/lib/ai/router";
 import { createMockProvider } from "@/lib/ai/mock";
+import { mockFiche } from "@/lib/ai/tasks/generate";
+import { GEN_VERSION } from "@/lib/jobs/handlers/generate";
 import { supabaseAiStore } from "@/lib/ai/server";
 import { createTestUser, deleteTestUser, type TestUser } from "../helpers/supabase";
 import { COURSE_PAGES, TRAP_PAGES, makePdf, makePptx } from "../helpers/fixtures";
@@ -99,28 +101,45 @@ describe("pipeline d'ingestion", () => {
   });
 
   it("cache par empreinte : relancer la génération ne rappelle pas l'IA", async () => {
-    const { count: before } = await db
-      .from("ai_calls")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("purpose", "generate_fiche");
     const { data: n } = await db
       .from("notions")
-      .select("id, content_hash")
+      .select("id, content_hash, title, pages, source_text")
       .eq("document_id", documentId)
+      .order("position")
       .limit(1)
       .single();
+    // Le cache n'est alimenté que par de vrais fournisseurs : on y dépose une sortie « réelle » pour cette notion.
+    const real = mockFiche({
+      title: n!.title,
+      subject: "Bases de données",
+      pages: n!.pages,
+      sourceText: n!.source_text,
+      language: "fr",
+    });
+    const up = await db
+      .from("ai_cache")
+      .upsert({
+        user_id: user.id,
+        key: `fiche:${GEN_VERSION}:${n!.content_hash}:0`,
+        purpose: "generate_fiche",
+        output: real as never,
+      });
+    expect(up.error).toBeNull();
+    const countFiche = async () =>
+      (
+        await db
+          .from("ai_calls")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("purpose", "generate_fiche")
+      ).count;
+    const before = await countFiche();
     await db
       .from("jobs")
       .update({ status: "queued", step: "start", attempts: 0, payload: { notionId: n!.id } })
       .eq("dedupe_key", `gen:${n!.id}:${n!.content_hash}`);
     await drain();
-    const { count: after } = await db
-      .from("ai_calls")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("purpose", "generate_fiche");
-    expect(after).toBe(before);
+    expect(await countFiche()).toBe(before);
   });
 
   it("PPTX : une page par diapo", async () => {

@@ -140,7 +140,9 @@ export class AiRouter {
             ok: true,
             latencyMs: res.latencyMs,
           });
-          if (opts.cacheKey) await this.store.setCache(opts.userId, opts.cacheKey, opts.purpose, data);
+          // Les sorties simulées ne vont jamais dans le cache (elles masqueraient une vraie génération).
+          if (opts.cacheKey && provider.name !== "mock")
+            await this.store.setCache(opts.userId, opts.cacheKey, opts.purpose, data);
           return { data, provider: provider.name, model: res.model, cached: false };
         } catch (err) {
           const e = err instanceof AiError ? err : new AiError("Erreur inattendue", "network", true);

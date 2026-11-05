@@ -128,12 +128,13 @@ describe("routeur IA", () => {
     expect(providerOrder("meta", "meta")).toEqual(["meta"]);
   });
 
-  it("le simulé est déterministe et ne coûte rien", async () => {
-    const { store, logs } = memoryStore();
+  it("le simulé est déterministe, ne coûte rien et n'alimente pas le cache", async () => {
+    const { store, logs, cache } = memoryStore();
     const r = new AiRouter([createMockProvider()], store, 2);
-    const a = await r.generate({ ...base, mock: () => ({ ok: true, mot: "m" }) });
+    const a = await r.generate({ ...base, cacheKey: "k", mock: () => ({ ok: true, mot: "m" }) });
     expect(a.data.mot).toBe("m");
     expect(logs[0]!.costUsd).toBe(0);
+    expect(cache.size).toBe(0);
   });
 });
 

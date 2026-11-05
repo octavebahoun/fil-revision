@@ -72,9 +72,9 @@ ${STYLE_RULES}
 
 FICHE (5 lignes au total, lisible sur téléphone) :
 - "title" : le nom de la notion.
-- "explanation" : 1 à 2 phrases, ${LIMITS.explanation} caractères max. L'idée essentielle.
-- "example" : 1 à 2 phrases, ${LIMITS.example} caractères max. Un exemple concret tiré du cours (ou directement illustratif du cours).
-- "question" : UNE seule question de vérification, ${LIMITS.question} caractères max, terminée par « ? ».
+- "explanation" : 1 à 2 phrases courtes, ${LIMITS.explanation} caractères MAX (2 lignes). L'idée essentielle.
+- "example" : 1 à 2 phrases courtes, ${LIMITS.example} caractères MAX (2 lignes). Un exemple concret tiré du cours.
+- "question" : UNE seule question de vérification, ${LIMITS.question} caractères MAX (1 ligne), terminée par « ? ».
 - "answer" : la réponse attendue, ${LIMITS.answer} caractères max.
 - "more" : facultatif, détails utiles pour « En savoir plus », ${LIMITS.more} caractères max.
 
@@ -151,9 +151,9 @@ export function mockFiche(n: NotionInput): GenFicheOutput {
   return {
     fiche: {
       title: truncateWords(n.title, 90),
-      explanation: truncateWords(s0.text, 200),
-      example: truncateWords(s1.text, 200),
-      question: truncateWords(`Comment expliquerais-tu « ${truncateWords(n.title, 60)} » avec tes mots`, 140) + " ?",
+      explanation: truncateWords(s0.text, 190),
+      example: truncateWords(s1.text, 190),
+      question: truncateWords(`Comment expliquerais-tu « ${truncateWords(n.title, 50)} »`, 95) + " ?",
       answer: truncateWords(s0.text, 280),
       more:
         ss.length > 2
