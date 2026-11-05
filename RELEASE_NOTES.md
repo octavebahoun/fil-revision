@@ -13,7 +13,7 @@
 | Lint, types stricts, format | 0 erreur, 0 avertissement |
 | Tests unitaires + intégration (Postgres réel) | 179 verts ; couverture du code métier : 93,9 % des lignes, 94,5 % des fonctions |
 | RLS anti-IDOR | 41/41 en local **et en production** |
-| E2E Playwright (mobile, et bureau pour l'accessibilité) | 14 parcours verts, dont « absence simulée » et « session complète en mode avion » ; 7/7 contre la prod |
+| E2E Playwright (mobile, et bureau pour l'accessibilité) | 14 parcours verts, dont « absence simulée » et « session complète en mode avion » ; 10/10 contre la prod |
 | Accessibilité axe (WCAG 2.2 AA) | 0 violation sérieuse ou critique sur 24 écrans, mobile et bureau |
 | Audit photosensible (CSS livré) | OK ; aucune boucle rapide, aucun `blink` |
 | Secrets dans le build client | aucun |
