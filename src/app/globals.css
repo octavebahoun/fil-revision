@@ -356,3 +356,22 @@
     display: none !important;
   }
 }
+
+/* Impression des fiches : noir sur blanc, sans navigation. */
+@media print {
+  :root,
+  [data-theme] {
+    --background: #fff;
+    --foreground: #000;
+    --card: #fff;
+    --muted-foreground: #333;
+  }
+  body {
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+  .hide-in-focus,
+  nav {
+    display: none !important;
+  }
+}

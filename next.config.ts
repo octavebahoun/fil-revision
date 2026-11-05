@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["unpdf", "mammoth", "web-push"],
   turbopack: {
+    // sql.js (SQLite WASM) référence fs/path pour Node : inutiles dans le navigateur.
+    resolveAlias: {
+      fs: { browser: "./src/lib/empty-module.ts" },
+      path: { browser: "./src/lib/empty-module.ts" },
+      crypto: { browser: "./src/lib/empty-module.ts" },
+    },
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],

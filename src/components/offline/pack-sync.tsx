@@ -36,6 +36,7 @@ export function OfflinePackSync() {
         await db.put("daily", { key: "pack", savedAt: now, payload: { day: body.day, sessionId: body.session.id } });
         // Les pages utiles hors ligne sont mises en cache par le service worker.
         void fetch(`/session/${body.session.id}`).catch(() => {});
+        navigator.serviceWorker?.controller?.postMessage("precache-offline");
       } catch {
         /* sans réseau ou sans IndexedDB : on réessaiera demain */
       }

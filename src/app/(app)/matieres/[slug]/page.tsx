@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, FileText, Play, Map as MapIcon, GraduationCap } from "lucide-react";
+import { ChevronRight, FileText, Play, Map as MapIcon, GraduationCap, Download, Printer } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { masteryBySubject } from "@/lib/data/subjects";
 import { PageHeader } from "@/components/common/page-header";
@@ -111,6 +111,16 @@ export default async function MatierePage({ params }: PageProps<"/matieres/[slug
           >
             <GraduationCap className="size-5 text-primary" aria-hidden="true" /> Examen blanc
           </Link>
+          <Link href={`/export/${slug}`} className="flex min-h-12 items-center gap-3 rounded-2xl px-3 hover:bg-muted">
+            <Printer className="size-5 text-primary" aria-hidden="true" /> Fiches à imprimer (PDF)
+          </Link>
+          <a
+            href={`/api/export/anki?matiere=${slug}`}
+            className="flex min-h-12 items-center gap-3 rounded-2xl px-3 hover:bg-muted"
+            download
+          >
+            <Download className="size-5 text-primary" aria-hidden="true" /> Flashcards pour Anki (CSV)
+          </a>
         </nav>
       ) : null}
 

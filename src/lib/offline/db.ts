@@ -30,12 +30,16 @@ let dbPromise: Promise<IDBPDatabase<FilDB>> | null = null;
 
 export function localDb() {
   if (!dbPromise) {
-    dbPromise = openDB<FilDB>("fil", 1, {
+    // Version 2 : crée les magasins manquants (base vide ou partielle laissée par une autre version).
+    dbPromise = openDB<FilDB>("fil", 2, {
       upgrade(db) {
-        const s = db.createObjectStore("sessions", { keyPath: "id" });
-        s.createIndex("by-updated", "updatedAt");
-        db.createObjectStore("outbox", { keyPath: "seq", autoIncrement: true });
-        db.createObjectStore("daily", { keyPath: "key" });
+        if (!db.objectStoreNames.contains("sessions")) {
+          const s = db.createObjectStore("sessions", { keyPath: "id" });
+          s.createIndex("by-updated", "updatedAt");
+        }
+        if (!db.objectStoreNames.contains("outbox"))
+          db.createObjectStore("outbox", { keyPath: "seq", autoIncrement: true });
+        if (!db.objectStoreNames.contains("daily")) db.createObjectStore("daily", { keyPath: "key" });
       },
     });
   }

@@ -20,14 +20,12 @@ export async function addExamAction(
     date: formData.get("date"),
   });
   if (!parsed.success) return { message: "Choisis une matière et une date." };
-  const { error } = await supabase
-    .from("exams")
-    .insert({
-      user_id: user.id,
-      subject_id: parsed.data.subjectId,
-      title: parsed.data.title,
-      exam_date: parsed.data.date,
-    });
+  const { error } = await supabase.from("exams").insert({
+    user_id: user.id,
+    subject_id: parsed.data.subjectId,
+    title: parsed.data.title,
+    exam_date: parsed.data.date,
+  });
   if (error) return { message: "Impossible d'ajouter cet examen." };
   revalidatePath("/examens");
   revalidatePath("/");

@@ -11,6 +11,8 @@ import { FicheView } from "@/components/cards/fiche-view";
 import { SourceLink } from "@/components/cards/source-link";
 import { CardManager } from "@/components/cards/card-manager";
 import { Button } from "@/components/ui/button";
+import { StartCode } from "@/components/code/start-code";
+import { pickLanguage } from "@/lib/ai/tasks/code";
 
 export const metadata: Metadata = { title: "Notion" };
 
@@ -35,6 +37,8 @@ export default async function NotionPage({ params }: PageProps<"/notions/[id]">)
   const others = (cards ?? []).filter((c) => c.type !== "fiche");
   const doc = notion.documents as unknown as { title: string };
   const subject = notion.subjects as unknown as { name: string; slug: string };
+  const { data: src } = await supabase.from("notions").select("source_text").eq("id", id).single();
+  const codeLanguage = pickLanguage(subject.name, src?.source_text ?? "");
 
   return (
     <>
@@ -77,6 +81,7 @@ export default async function NotionPage({ params }: PageProps<"/notions/[id]">)
         >
           <PenLine className="size-5 text-primary" aria-hidden="true" /> Je l&apos;explique avec mes mots
         </Link>
+        {codeLanguage ? <StartCode notionId={notion.id} /> : null}
       </nav>
       {cards?.length ? (
         <MoreDetails label={`Mes contenus (${cards.length})`}>

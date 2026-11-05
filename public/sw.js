@@ -4,14 +4,24 @@ const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = "/hors-ligne";
 
+/** Met en cache la page hors ligne ET ses fichiers JS/CSS (sinon elle ne peut pas démarrer sans réseau). */
+async function precacheOffline() {
+  const res = await fetch(new Request(OFFLINE_URL, { credentials: "same-origin", cache: "no-store" }));
+  if (!res.ok) return;
+  const html = await res.clone().text();
+  const assets = [...new Set([...html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)].map((m) => m[1]))];
+  const statics = await caches.open(STATIC_CACHE);
+  await Promise.all(assets.map((u) => statics.add(u).catch(() => undefined)));
+  await (await caches.open(PAGE_CACHE)).put(OFFLINE_URL, res);
+}
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(PAGE_CACHE)
-      .then((c) => c.add(new Request(OFFLINE_URL, { credentials: "same-origin" })))
-      .catch(() => undefined)
-      .then(() => self.skipWaiting()),
-  );
+  event.waitUntil(precacheOffline().catch(() => undefined).then(() => self.skipWaiting()));
+});
+
+// L'app demande un rafraîchissement du cache hors ligne (ex. après une nouvelle version).
+self.addEventListener("message", (event) => {
+  if (event.data === "precache-offline") event.waitUntil(precacheOffline().catch(() => undefined));
 });
 
 self.addEventListener("activate", (event) => {
@@ -24,7 +34,7 @@ self.addEventListener("activate", (event) => {
 });
 
 function isStatic(url) {
-  return url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || /\.(woff2?|css|js)$/.test(url.pathname);
+  return url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || /\.(woff2?|css|js|wasm)$/.test(url.pathname);
 }
 
 /** Pages gardées pour un usage hors ligne : accueil, page hors ligne, sessions. */
