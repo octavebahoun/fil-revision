@@ -14,7 +14,7 @@ export default async function SessionPage({ params }: PageProps<"/session/[id]">
   const { supabase } = await requireUser();
   const { data: s } = await supabase
     .from("study_sessions")
-    .select("id, mode, planned_minutes, items, position, status")
+    .select("id, mode, planned_minutes, items, position, status, timer")
     .eq("id", id)
     .maybeSingle();
   if (!s) notFound();
@@ -29,6 +29,7 @@ export default async function SessionPage({ params }: PageProps<"/session/[id]">
         items,
         position: s.position,
         status: s.status === "done" ? "done" : "active",
+        timerMinutes: (s.timer as { minutes?: number } | null)?.minutes ?? null,
       }}
       cards={cards}
     />

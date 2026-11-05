@@ -58,6 +58,24 @@ function toInput(n: Awaited<ReturnType<typeof loadNotion>>, feedback?: string): 
 const HAS_CODE =
   /(<\/?[a-z][\w-]*[^>]*>|\b(SELECT|INSERT|CREATE TABLE|function|const|let|import|echo|\$[a-z_]+|=>|class \w+|npm |pnpm |docker )\b|[{};]\s*$)/im;
 
+/** Ce que la question affirme comme vrai (les leurres et les affirmations fausses sont exclus). */
+export function quizFacts(q: GenQuizOutput["quiz"][number]): string {
+  switch (q.type) {
+    case "qcm":
+      return [q.question, q.choices[q.answerIndex] ?? "", q.explanation].join(". ");
+    case "vrai_faux":
+      return q.answer ? `${q.statement}. ${q.explanation}` : q.explanation;
+    case "reponse_courte":
+      return [q.question, q.answers[0] ?? "", q.explanation].join(". ");
+    case "code_trou":
+      return [q.blanks.join(" "), q.explanation].join(". ");
+    case "ordre":
+      return [...q.items, q.explanation].join(". ");
+    case "association":
+      return [...q.pairs.map((p) => `${p.left} : ${p.right}`), q.explanation].join(". ");
+  }
+}
+
 /** Éléments à vérifier, avec un identifiant stable. */
 export function verifiableItems(p: Payload): VerifiableItem[] {
   const items: VerifiableItem[] = [];
@@ -69,6 +87,7 @@ export function verifiableItems(p: Payload): VerifiableItem[] {
       text: `${f.explanation} | Exemple : ${f.example} | Question : ${f.question} → ${f.answer}${f.more ? ` | Plus : ${f.more}` : ""}`,
       sourceQuote: f.sourceQuote,
       sourcePages: f.sourcePages,
+      facts: [f.explanation, f.example, f.answer].join(". "),
     });
     p.fiche.flashcards.forEach((c, i) =>
       items.push({
@@ -77,6 +96,7 @@ export function verifiableItems(p: Payload): VerifiableItem[] {
         text: `${c.front} → ${c.back}`,
         sourceQuote: c.sourceQuote,
         sourcePages: c.sourcePages,
+        facts: `${c.front}. ${c.back}`,
       }),
     );
     p.fiche.vocab.forEach((v, i) =>
@@ -86,6 +106,7 @@ export function verifiableItems(p: Payload): VerifiableItem[] {
         text: `${v.en} = ${v.fr}. ${v.example}`,
         sourceQuote: v.sourceQuote,
         sourcePages: v.sourcePages,
+        facts: `${v.en}. ${v.example}`,
       }),
     );
     p.fiche.phrases.forEach((v, i) =>
@@ -95,12 +116,20 @@ export function verifiableItems(p: Payload): VerifiableItem[] {
         text: `${v.en} = ${v.fr}`,
         sourceQuote: v.sourceQuote,
         sourcePages: v.sourcePages,
+        facts: v.en,
       }),
     );
   }
   p.quiz?.quiz.forEach((q, i) => {
     const { sourceQuote, sourcePages, ...rest } = q;
-    items.push({ id: `q${i}`, type: q.type, text: JSON.stringify(rest), sourceQuote, sourcePages });
+    items.push({
+      id: `q${i}`,
+      type: q.type,
+      text: JSON.stringify(rest),
+      sourceQuote,
+      sourcePages,
+      facts: quizFacts(q),
+    });
   });
   return items;
 }
@@ -134,7 +163,8 @@ async function stepFiche(ctx: JobContext, job: JobRow): Promise<StepResult> {
   const docKind = (n.documents as unknown as { kind: string }).kind;
   return {
     kind: "continue",
-    step: docKind === "ressource" ? "verify" : "quiz",
+    // Après une nouvelle tentative de fiche, le quiz déjà généré est conservé.
+    step: docKind === "ressource" || p.quiz ? "verify" : "quiz",
     payload: { fiche: fiche as Json },
     progress: 1,
     total: 4,
@@ -172,8 +202,16 @@ async function stepVerify(ctx: JobContext, job: JobRow): Promise<StepResult> {
   const p = job.payload as Payload;
   const n = await loadNotion(ctx, job);
   const items = verifiableItems(p);
-  // Barrière 1 : la citation doit exister mot pour mot (ou presque) dans la source.
-  const { kept, rejected } = deterministicCheck(items, n.source_text);
+  const { data: docPages } = await ctx.db
+    .from("document_pages")
+    .select("text")
+    .eq("document_id", n.document_id)
+    .order("page_number");
+  const documentText = (docPages ?? []).map((d) => d.text).join("\n");
+  // Barrière 1 : la citation doit exister mot pour mot (ou presque) dans la source ;
+  // les noms propres et chiffres affirmés doivent exister dans le document.
+  const { kept, rejected } = deterministicCheck(items, n.source_text, documentText || n.source_text);
+  let ficheReason = rejected.includes("fiche") ? "un nom propre, un chiffre ou une citation absent du cours" : "";
   // Barrière 2 : relecture par un modèle léger, élément par élément.
   let llmRejected: string[] = [];
   if (kept.length) {
@@ -193,6 +231,8 @@ async function stepVerify(ctx: JobContext, job: JobRow): Promise<StepResult> {
       const verdicts = new Map(data.verdicts.map((v) => [v.id, v.supported]));
       // Un élément sans verdict n'est pas considéré comme vérifié.
       llmRejected = kept.filter((k) => verdicts.get(k.id) !== true).map((k) => k.id);
+      const why = data.verdicts.find((v) => v.id === "fiche" && !v.supported)?.reason;
+      if (why) ficheReason = why.slice(0, 300);
     } catch (err) {
       if (!(err instanceof AiError) || err.code !== "schema") throw err;
       llmRejected = kept.map((k) => k.id);
@@ -200,17 +240,15 @@ async function stepVerify(ctx: JobContext, job: JobRow): Promise<StepResult> {
   }
   const allRejected = [...rejected, ...llmRejected];
   const ficheMissing = !p.fiche || allRejected.includes("fiche");
-  if (ficheMissing && (p.ficheRetry ?? 0) < 1) {
-    // Une seule nouvelle tentative, avec une consigne de fidélité renforcée.
+  if (ficheMissing && (p.ficheRetry ?? 0) < 2) {
+    // Jusqu'à 2 nouvelles tentatives pour la fiche seule, avec la raison du refus du relecteur.
     return {
       kind: "continue",
       step: "fiche",
       payload: {
         ficheRetry: (p.ficheRetry ?? 0) + 1,
         fiche: null,
-        quiz: null,
-        feedback:
-          "La version précédente contenait des éléments absents du texte. Reste strictement fidèle au texte et cite-le mot pour mot.",
+        feedback: `La version précédente a été refusée par le relecteur (${ficheReason || "éléments absents du texte"}). Reste strictement fidèle au texte : n'ajoute aucun exemple, chiffre, nom ou généralisation qui n'y figure pas, et cite-le mot pour mot.`,
       },
       progress: 0,
       total: 4,

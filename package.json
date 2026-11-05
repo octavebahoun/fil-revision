@@ -26,7 +26,8 @@
     "verify": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm audit:photo",
     "dev:user": "tsx scripts/dev-user.ts",
     "setup:prod": "tsx scripts/setup-prod.ts",
-    "vercel:env": "tsx scripts/vercel-env.ts"
+    "vercel:env": "tsx scripts/vercel-env.ts",
+    "audit:content": "tsx --conditions=react-server scripts/audit-content.ts"
   },
   "dependencies": {
     "@fontsource/opendyslexic": "5.3.0",

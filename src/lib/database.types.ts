@@ -163,6 +163,66 @@ isOneToOne: false
       referencedColumns: ["id","user_id"]
     }
                   ]
+                },"exercise_guides": {
+                  Row: {
+                    "created_at": string,"document_id": string,"id": string,"steps": NonNullable<Json>,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"document_id": string,"id"?: string,"steps": NonNullable<Json>,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"document_id"?: string,"id"?: string,"steps"?: NonNullable<Json>,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exercise_guides_document_id_user_id_fkey"
+      columns: ["document_id","user_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"exercise_progress": {
+                  Row: {
+                    "answer": string | null,"done": boolean,"feedback": Json | null,"guide_id": string,"hints_shown": number,"id": string,"step_index": number,"updated_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answer"?: string | null,"done"?: boolean,"feedback"?: Json | null,"guide_id": string,"hints_shown"?: number,"id"?: string,"step_index": number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "answer"?: string | null,"done"?: boolean,"feedback"?: Json | null,"guide_id"?: string,"hints_shown"?: number,"id"?: string,"step_index"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "exercise_progress_guide_id_user_id_fkey"
+      columns: ["guide_id","user_id"]
+isOneToOne: false
+      referencedRelation: "exercise_guides"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"feynman_attempts": {
+                  Row: {
+                    "created_at": string,"explanation": string,"feedback": Json | null,"id": string,"notion_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"explanation": string,"feedback"?: Json | null,"id"?: string,"notion_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"explanation"?: string,"feedback"?: Json | null,"id"?: string,"notion_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feynman_attempts_notion_id_user_id_fkey"
+      columns: ["notion_id","user_id"]
+isOneToOne: false
+      referencedRelation: "notions"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 },"jobs": {
                   Row: {
                     "attempts": number,"created_at": string,"dedupe_key": string | null,"id": string,"last_error": string | null,"locked_until": string | null,"max_attempts": number,"payload": NonNullable<Json>,"progress": number,"run_after": string,"status": string,"step": string,"total": number,"type": string,"updated_at": string,"user_id": string
@@ -176,6 +236,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"mock_exams": {
+                  Row: {
+                    "created_at": string,"finished_at": string | null,"id": string,"result": Json | null,"session_id": string,"subject_id": string,"timer_minutes": number | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"finished_at"?: string | null,"id"?: string,"result"?: Json | null,"session_id": string,"subject_id": string,"timer_minutes"?: number | null,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"finished_at"?: string | null,"id"?: string,"result"?: Json | null,"session_id"?: string,"subject_id"?: string,"timer_minutes"?: number | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "mock_exams_session_id_user_id_fkey"
+      columns: ["session_id","user_id"]
+isOneToOne: false
+      referencedRelation: "study_sessions"
+      referencedColumns: ["id","user_id"]
+    },{
+      foreignKeyName: "mock_exams_subject_id_user_id_fkey"
+      columns: ["subject_id","user_id"]
+isOneToOne: false
+      referencedRelation: "subjects"
+      referencedColumns: ["id","user_id"]
+    }
                   ]
                 },"notions": {
                   Row: {
@@ -311,6 +397,46 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"tutor_messages": {
+                  Row: {
+                    "citations": NonNullable<Json>,"content": string,"created_at": string,"id": string,"role": string,"thread_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "citations"?: NonNullable<Json>,"content": string,"created_at"?: string,"id"?: string,"role": string,"thread_id": string,"user_id"?: string
+                  }
+                  Update: {
+                    "citations"?: NonNullable<Json>,"content"?: string,"created_at"?: string,"id"?: string,"role"?: string,"thread_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tutor_messages_thread_id_user_id_fkey"
+      columns: ["thread_id","user_id"]
+isOneToOne: false
+      referencedRelation: "tutor_threads"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
+                },"tutor_threads": {
+                  Row: {
+                    "created_at": string,"id": string,"notion_id": string | null,"title": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"notion_id"?: string | null,"title"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"notion_id"?: string | null,"title"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "tutor_threads_notion_id_user_id_fkey"
+      columns: ["notion_id","user_id"]
+isOneToOne: false
+      referencedRelation: "notions"
+      referencedColumns: ["id","user_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -367,6 +493,11 @@ isOneToOne: false
 "review_new_notions":
 { Args: { "p_limit"?: number,"p_subject"?: string }; Returns: {
               "document_id": string,"fiche_id": string,"notion_id": string,"subject_id": string,"title": string
+            }[]
+                           },
+"search_course":
+{ Args: { "p_limit"?: number,"p_notion"?: string,"p_query": string,"p_subject"?: string }; Returns: {
+              "document_id": string,"notion_id": string,"pages": (number)[],"rank": number,"source_text": string,"title": string
             }[]
                            },
 "study_days":

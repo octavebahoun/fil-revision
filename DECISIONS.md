@@ -31,3 +31,27 @@ Chaque choix, avec sa raison en une ou deux lignes. Les plus récentes en bas de
 
 ## Ressources de la machine
 - **Mode léger** (demande de l'utilisateur, 2026-11-05) : PC partagé d'environ 7 Go de RAM. Supabase local sans Studio ni Realtime (le suivi en direct utilise du polling), un seul serveur Next à la fois, arrêté dès qu'il ne sert plus, Playwright à 1 worker.
+
+## IA et génération (phase 3)
+- **Raisonnement coupé** (`thinking: disabled`) pour la segmentation, les fiches et les quiz : extraction fidèle d'un texte, deux fois moins de tokens de sortie. La **relecture** garde le raisonnement (modèle léger `deepseek-flash`, peu cher).
+- **Prix prudents** (tarifs catalogue les plus hauts relevés en novembre 2026) : 1re génération réelle estimée 0,97 $, payée 0,83 $ (solde DeepSeek). Surchargeables par `AI_PRICING_JSON`.
+- **Listes tolérantes** : une flashcard ou une question mal formée est écartée sans rejeter toute la réponse ; la fiche reste stricte. Une citation trop longue est tronquée (son début reste exact).
+- **Fiche = 5 lignes de 100 caractères** : explication ≤ 200, exemple ≤ 200, question ≤ 100 caractères. Si le modèle enchaîne plusieurs questions, seule la première est gardée.
+- **Le simulé n'alimente jamais le cache** (sinon une vraie génération ultérieure recevrait du faux contenu).
+- **Estimation avant génération massive** : au-delà de `AI_CONFIRM_THRESHOLD_USD` (0,30 $ par défaut), un cours attend un clic « Lancer la préparation » ; en CLI, `--yes`.
+- **Codes d'erreur précis** dans le journal IA (`schema:fiche.question:custom`…), sans aucun contenu de cours.
+
+## Révision (phase 4)
+- **FSRS calculé côté serveur** à la synchronisation (ts-fsrs, sans aléa) ; l'état d'avant chaque réponse est gardé pour pouvoir l'annuler (« J'ai décroché »).
+- **« J'ai décroché »** annule les erreurs des 2 dernières minutes (fenêtre d'absence probable) et revient à l'élément précédent.
+- **Inactivité** : seul un clic sur une réponse note une carte ; 45 s sans interaction → bandeau « Où j'en étais ? ».
+- **File d'envoi** IndexedDB : verrou relâché de façon asynchrone (bug trouvé par le test « absence simulée » : la file se figeait après une coupure), délai de 8 s par requête, relance au retour du réseau.
+- **Pages de session hors navigation** (groupe `(focus)`) : une seule chose à l'écran.
+- **Fonctions SQL** (`review_due_cards`, `subject_mastery`…) : évitent la limite de 1 000 lignes de l'API.
+
+## Mise en ligne (phase 5)
+- **Vercel** : projet `fil-revision`, région `fra1` (proche de Supabase `eu-central-2`), Node 24, cron Vercel quotidien en secours. **Supabase Cron** (pg_cron + pg_net, chaque minute) appelle `/api/jobs/tick` quand des jobs attendent ; URL et secret dans Vault.
+- **E-mails en anglais** : l'offre gratuite de Supabase interdit de modifier les modèles sans SMTP personnalisé. Les modèles français sont prêts (`supabase/templates`) et s'activent avec `SMTP_CONFIGURED=1`. Conséquence : le lien de réinitialisation doit être ouvert dans le même navigateur que la demande.
+- **Compte de production** créé par l'API admin (confirmé, mot de passe aléatoire jamais stocké) : l'utilisateur choisit son mot de passe via « Mot de passe oublié ».
+- **Tests contre la prod** : `TEST_TARGET=prod` (RLS) et `E2E_BASE_URL` (Playwright) utilisent des comptes temporaires, supprimés après ; la liste blanche est resynchronisée.
+- **E2E sans limitation de débit** (toutes les connexions viennent de la même IP) ; la limitation est couverte par les tests d'intégration.

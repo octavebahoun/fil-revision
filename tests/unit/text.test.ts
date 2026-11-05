@@ -126,3 +126,18 @@ describe("listes tolérantes de la génération", () => {
     expect(GenFicheOutput.safeParse({ fiche: out.fiche, flashcards: [{ front: "x" }] }).success).toBe(false);
   });
 });
+
+describe("contrôle des faits inventés (noms propres, chiffres)", () => {
+  it("écarte un exemple inventé, garde un exemple du cours", async () => {
+    const { unsupportedFacts } = await import("@/lib/ai/tasks/verify");
+    const src =
+      "Good morning. My name is Maria Lopez. I am 18 years old. Le taux passe de 80 % à 65 %. GitHub Pages publie le site.";
+    expect(unsupportedFacts("My name is John. I am 20 years old.", src)).toEqual(
+      expect.arrayContaining(["John", "20"]),
+    );
+    expect(unsupportedFacts("Notre entreprise s'appelle EcoCup.", src)).toContain("EcoCup");
+    expect(unsupportedFacts("Maria a 18 ans. Le taux baisse de 80 % à 65 %, avec GitHub Pages.", src)).toEqual([]);
+    expect(unsupportedFacts("Il y a 3 étapes.", src)).toEqual([]);
+    expect(unsupportedFacts("La variation vaut 18,75 %.", "V = -18,75 %")).toEqual([]);
+  });
+});

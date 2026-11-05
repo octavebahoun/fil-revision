@@ -100,7 +100,7 @@ ${STYLE_RULES}
 FICHE (5 lignes au total, lisible sur téléphone) :
 - "title" : le nom de la notion.
 - "explanation" : 1 à 2 phrases courtes, ${LIMITS.explanation} caractères MAX (2 lignes). L'idée essentielle.
-- "example" : 1 à 2 phrases courtes, ${LIMITS.example} caractères MAX (2 lignes). Un exemple concret tiré du cours.
+- "example" : 1 à 2 phrases courtes, ${LIMITS.example} caractères MAX (2 lignes). Un exemple TIRÉ DU COURS (un cas, un chiffre, une phrase ou un exercice du texte). N'invente jamais de nom, de chiffre, d'entreprise ou de produit : si le cours n'a pas d'exemple, reprends une application directe de ce qu'il dit.
 - "question" : UNE seule question de vérification, ${LIMITS.question} caractères MAX (1 ligne), terminée par « ? ».
 - "answer" : la réponse attendue, ${LIMITS.answer} caractères max.
 - "more" : facultatif, détails utiles pour « En savoir plus », ${LIMITS.more} caractères max.
@@ -138,6 +138,7 @@ TYPES (varie-les, chaque objet a un champ "type") :
 ${hasCode ? `- "code_trou" : {"language", "question", "code" avec ____ pour chaque trou, "blanks": les réponses dans l'ordre, "explanation"} — le code doit venir du cours.` : `- Pas de "code_trou" (pas de code dans ce passage).`}
 "explanation" : une correction bienveillante de ${LIMITS.explain} caractères max, qui explique pourquoi.
 Questions de ${LIMITS.quizQuestion} caractères max. Pas de piège, pas de double négation. Pas de question sur le temps ou la vitesse.
+Les leurres de QCM peuvent être faux, mais la bonne réponse, l'explication et les affirmations vraies doivent venir du texte.
 ${SOURCE_RULES}
 
 Format JSON exact : {"quiz": [{"type": "qcm", "question": "", "choices": ["", "", ""], "answerIndex": 0, "explanation": "", "sourceQuote": "", "sourcePages": [1]}]}`;

@@ -15,6 +15,7 @@ import { ResumeBanner } from "./resume-banner";
 import { ParkingInput } from "./parking-input";
 import { Celebration } from "./celebration";
 import { ReadingRuler } from "./reading-ruler";
+import { ExamDone, ExamTimer } from "./exam-parts";
 import { FicheContent } from "@/lib/content/schemas";
 import { localDb, type LocalSession } from "@/lib/offline/db";
 import { enqueue, startOutbox } from "@/lib/offline/outbox";
@@ -26,6 +27,8 @@ const ABSENCE_WINDOW_MS = 120_000;
 type Props = {
   session: Omit<LocalSession, "cards" | "answers" | "stats" | "lastActiveAt" | "updatedAt"> & {
     status: "active" | "done";
+    /** Examen blanc avec minuteur optionnel (minutes). */
+    timerMinutes?: number | null;
   };
   cards: SessionCard[];
 };
@@ -362,7 +365,11 @@ export function SessionRunner({ session, cards }: Props) {
   }
 
   if (done) {
-    return <SessionDone stats={local.stats} total={items.length} />;
+    return session.mode === "exam" ? (
+      <ExamDone sessionId={session.id} />
+    ) : (
+      <SessionDone stats={local.stats} total={items.length} />
+    );
   }
 
   const ficheForCard = card?.ficheId && card.ficheId !== card.id ? cardsById.get(card.ficheId) : undefined;
@@ -374,9 +381,14 @@ export function SessionRunner({ session, cards }: Props) {
       {settings?.settings.readingRuler ? <ReadingRuler /> : null}
       <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-base font-semibold" aria-live="polite">
-            {progressLabel}
-            <span className="sr-only"> : {card?.notionTitle}</span>
+          <span className="flex items-center gap-3">
+            <span className="text-base font-semibold" aria-live="polite">
+              {progressLabel}
+              <span className="sr-only"> : {card?.notionTitle}</span>
+            </span>
+            {session.timerMinutes ? (
+              <ExamTimer sessionId={session.id} minutes={session.timerMinutes} paused={banner || parking} />
+            ) : null}
           </span>
           <div className="flex items-center gap-1">
             <Button
