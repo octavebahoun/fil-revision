@@ -6,6 +6,10 @@ import { saveSettingsAction } from "@/lib/settings-actions";
 type Ctx = { settings: Settings; update: (patch: Partial<Settings>) => void };
 const SettingsContext = createContext<Ctx | null>(null);
 
+export function useSettingsOptional() {
+  return useContext(SettingsContext);
+}
+
 export function useSettings() {
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error("useSettings hors SettingsProvider");

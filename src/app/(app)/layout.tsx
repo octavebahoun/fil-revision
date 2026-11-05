@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth/session";
 import { parseSettings } from "@/lib/settings";
 import { SettingsProvider } from "@/components/providers/settings-provider";
 import { AppNav } from "@/components/shell/app-nav";
+import { OfflineBanner } from "@/components/common/offline-banner";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user, supabase } = await requireUser();
@@ -18,9 +19,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </a>
       <div className="flex min-h-dvh">
         <AppNav />
-        <main id="contenu" className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-12">
-          {children}
-        </main>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <OfflineBanner />
+          <main id="contenu" className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-10 md:pb-12">
+            {children}
+          </main>
+        </div>
       </div>
     </SettingsProvider>
   );

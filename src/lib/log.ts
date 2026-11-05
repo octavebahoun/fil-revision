@@ -12,8 +12,12 @@ function scrub(value: unknown): unknown {
   return value;
 }
 
+const ORDER: Record<Level, number> = { debug: 0, info: 1, warn: 2, error: 3 };
+
 export function log(level: Level, event: string, fields: Fields = {}) {
-  if (level === "debug" && process.env.NODE_ENV === "production") return;
+  const min =
+    (process.env.LOG_LEVEL as Level | undefined) ?? (process.env.NODE_ENV === "production" ? "info" : "debug");
+  if (ORDER[level] < (ORDER[min] ?? 0)) return;
   if (process.env.VITEST && level !== "error") return;
   const safe: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(fields)) safe[k] = scrub(v);

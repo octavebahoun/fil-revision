@@ -20,10 +20,11 @@
     "env:local": "tsx scripts/env-local.ts",
     "gen:secrets": "tsx scripts/gen-secrets.ts",
     "allowlist:sync": "tsx scripts/sync-allowlist.ts",
-    "import:cours": "tsx scripts/import-cours.ts",
+    "import:cours": "tsx --conditions=react-server scripts/import-cours.ts",
     "audit:photo": "tsx scripts/audit-photosensitive.ts",
     "audit:secrets": "tsx scripts/check-client-secrets.ts",
-    "verify": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm audit:photo"
+    "verify": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test && pnpm audit:photo",
+    "dev:user": "tsx scripts/dev-user.ts"
   },
   "dependencies": {
     "@fontsource/opendyslexic": "5.3.0",
