@@ -1,20 +1,17 @@
 # Avancement
 
 ## Phase en cours
-Phase 6 — Tuteur et entraînement (démarrage). Phase 5 faite (prod en ligne), phase 3 : relecture et durcissement en cours.
+Phase 9 — Release : tout est vérifié en local et en CI. **Reste à déployer en prod la dernière version** (phases 7–9) : bloqué par une permission de l'outil (déploiement), en attente de l'accord de l'utilisateur.
 
 ## Fait
-- **Phase 1** : Next.js 16, Supabase local, auth limitée à `ALLOWED_EMAILS` (hook Postgres), CSP à nonce, RLS + tests anti-IDOR, CI écrite, dépôt GitHub **privé** (octavebahoun/fil-revision).
-- **Phase 2** : upload direct vers le stockage privé, `pnpm import:cours` idempotent, extraction, nettoyage, notions, classement, jobs reprenables. Les 10 PDF importés (simulé), réimport sans doublon.
-- **Phase 3** : couche IA (DeepSeek → Meta → simulé), Zod, double vérification + contrôle des noms propres et chiffres inventés, cache, budget, estimation avant génération massive, régénération des cartes signalées, page Coûts IA. Génération réelle sur 3 cours (3 matières, 80 notions) : coût réel 0,83 $. Relecture de 25 fiches : fidèles, 2 exemples inventés trouvés → consignes et contrôles durcis, re-vérification en cours.
-- **Phase 4** : sessions FSRS, 3 modes, sauvegarde continue hors ligne, « Où j'en étais ? », « J'ai décroché », confort de lecture, audio, parking, réglages, accueil. **Test « absence simulée » vert** (a révélé et corrigé un blocage de la file d'envoi).
-- **Phase 5** : https://fil-revision.vercel.app en ligne (Vercel fra1 + Supabase cloud eu-central-2). Migrations poussées, hook de liste blanche actif (403 hors liste vérifié), Vault + pg_cron, ton compte créé. **RLS vérifiée en prod (41/41)**, **E2E Playwright mobile contre la prod (7/7)**.
-- Tests locaux : 148 unitaires/intégration, 7 E2E.
+- **Phases 1 à 8** : voir RELEASE_NOTES.md (périmètre complet de la section 5).
+- **Prod** : https://fil-revision.vercel.app (code de la phase 6), compte créé, RLS 41/41 et E2E 7/7 vérifiés en prod. 15 vrais cours importés (22 faux fichiers d'un projet Python retirés, import corrigé). Génération : 150 notions prêtes / 485, 1 181 cartes ; reprise automatique chaque nuit (plafond 2 $/jour).
+- **Section 9** : lint/types/format OK, 179 tests (couverture 93,9 %), 14 E2E dont absence simulée et mode avion, axe 0 violation sérieuse sur 24 écrans (mobile + bureau), audit photosensible OK, aucun secret dans le build, `pnpm audit --prod` propre, démarrage à froid OK, relecture de 25 fiches + `audit:content` (0 problème), CI verte.
 
 ## Tâche suivante
-1. Fin de la re-vérification de l'échantillon, puis import + génération des 10 PDF en prod (cache local copié pour ne pas repayer).
-2. Phase 6 : tuteur, Feynman, aide guidée aux exercices, examens blancs.
+1. Avec l'accord de l'utilisateur : `supabase db push --remote` (migration plan/push) puis `vercel deploy --prod`, puis E2E et RLS contre la prod.
+2. Surveiller la fin de la génération en prod (solde DeepSeek ≈ 2,96 $), puis `pnpm audit:content --prod`.
 
 ## Problèmes ouverts
-- Solde DeepSeek ≈ 5 $ au 2026-11-05 : la génération complète doit passer une seule fois (copie du cache local → prod prévue).
-- Prix des modèles non confirmés officiellement : estimation prudente, à recaler avec le solde DeepSeek.
+- Solde DeepSeek juste suffisant pour finir la génération (≈ 2,7 $ estimés restants).
+- E-mails Auth en anglais tant qu'aucun SMTP personnalisé n'est branché.
