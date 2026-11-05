@@ -305,14 +305,28 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "created_at": string,"display_name": string | null,"last_reminder_on": string | null,"settings": NonNullable<Json>,"streak": NonNullable<Json>,"timezone": string,"updated_at": string,"user_id": string
+                    "created_at": string,"display_name": string | null,"last_reminder_on": string | null,"plan_state": Json | null,"settings": NonNullable<Json>,"streak": NonNullable<Json>,"timezone": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"display_name"?: string | null,"last_reminder_on"?: string | null,"settings"?: NonNullable<Json>,"streak"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"user_id": string
+                    "created_at"?: string,"display_name"?: string | null,"last_reminder_on"?: string | null,"plan_state"?: Json | null,"settings"?: NonNullable<Json>,"streak"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"display_name"?: string | null,"last_reminder_on"?: string | null,"settings"?: NonNullable<Json>,"streak"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"user_id"?: string
+                    "created_at"?: string,"display_name"?: string | null,"last_reminder_on"?: string | null,"plan_state"?: Json | null,"settings"?: NonNullable<Json>,"streak"?: NonNullable<Json>,"timezone"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"push_subscriptions": {
+                  Row: {
+                    "auth": string,"created_at": string,"endpoint": string,"id": string,"p256dh": string,"user_agent": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth": string,"created_at"?: string,"endpoint": string,"id"?: string,"p256dh": string,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Update: {
+                    "auth"?: string,"created_at"?: string,"endpoint"?: string,"id"?: string,"p256dh"?: string,"user_agent"?: string | null,"user_id"?: string
                   }
                   Relationships: [
                     

@@ -3,12 +3,15 @@ import Link from "next/link";
 import { CalendarDays, Flame, Play, BookOpen, Moon } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { loadHome } from "@/lib/data/home";
+import { loadPlan } from "@/lib/data/plan";
+import { parseSettings } from "@/lib/settings";
 import { startSessionAction } from "@/lib/review/actions";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { EmptyState } from "@/components/common/empty-state";
 import { DurationPicker, StartForm } from "@/components/home/duration-picker";
 import { SubmitButton } from "@/components/common/submit-button";
+import { OfflinePackSync } from "@/components/offline/pack-sync";
 
 export const metadata: Metadata = { title: "Accueil" };
 
@@ -23,7 +26,13 @@ function greeting() {
 
 export default async function AccueilPage() {
   const { user, supabase } = await requireUser();
-  const home = await loadHome(supabase, user.id);
+  const [home, { data: profile }] = await Promise.all([
+    loadHome(supabase, user.id),
+    supabase.from("profiles").select("settings").eq("user_id", user.id).maybeSingle(),
+  ]);
+  const plan = home.nextExam
+    ? await loadPlan(supabase, user.id, parseSettings(profile?.settings).dailyCapMinutes)
+    : null;
 
   if (!home.hasContent) {
     return (
@@ -50,6 +59,7 @@ export default async function AccueilPage() {
 
   return (
     <section className="flex flex-col gap-8">
+      <OfflinePackSync />
       <h1 className="text-3xl font-bold">{greeting()} !</h1>
 
       <div className="flex flex-col items-center gap-4 rounded-3xl border bg-card px-5 py-7 shadow-sm">
@@ -67,6 +77,11 @@ export default async function AccueilPage() {
           <>
             <StartForm action={startSessionAction} />
             <DurationPicker />
+            {plan?.todayBySubject.length ? (
+              <p className="text-center">
+                Planning du jour : {plan.todayBySubject.map((s) => `${s.minutes} min de ${s.name}`).join(", ")}.
+              </p>
+            ) : null}
             <p className="text-center text-muted-foreground">
               {today.length
                 ? `Aujourd'hui : ${today.join(" · ")}.`

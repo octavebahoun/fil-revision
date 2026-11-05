@@ -57,7 +57,18 @@ export async function createSession(
         ? db.rpc("review_easy_cards", { p_subject: subject ?? undefined, p_limit: 60 })
         : Promise.resolve({ data: [] }),
     ]);
-    const freshRows = (fresh.data ?? []) as { notion_id: string; subject_id: string; fiche_id: string | null }[];
+    // Les matières dont l'examen approche passent en premier (planning à rebours).
+    const { data: exams } = await db
+      .from("exams")
+      .select("subject_id, exam_date")
+      .gte("exam_date", new Date().toISOString().slice(0, 10));
+    const examRank = new Map<string, string>();
+    for (const e of exams ?? [])
+      if (!examRank.has(e.subject_id) || e.exam_date < examRank.get(e.subject_id)!)
+        examRank.set(e.subject_id, e.exam_date);
+    const freshRows = [
+      ...((fresh.data ?? []) as { notion_id: string; subject_id: string; fiche_id: string | null }[]),
+    ].sort((a, b) => (examRank.get(a.subject_id) ?? "9999").localeCompare(examRank.get(b.subject_id) ?? "9999"));
     const notionIds = freshRows.map((n) => n.notion_id);
     const { data: freshCards } = notionIds.length
       ? await db
