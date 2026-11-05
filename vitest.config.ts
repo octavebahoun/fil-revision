@@ -5,7 +5,9 @@ import path from "node:path";
 
 function loadTestEnv() {
   const env: Record<string, string> = {};
-  for (const f of [".env", ".env.development.local", ".env.test.local"]) {
+  // TEST_TARGET=prod : uniquement les tests RLS, contre Supabase cloud (comptes temporaires supprimés après).
+  const files = process.env.TEST_TARGET === "prod" ? [".env"] : [".env", ".env.development.local", ".env.test.local"];
+  for (const f of files) {
     if (existsSync(f)) Object.assign(env, parse(readFileSync(f, "utf8")));
   }
   return env;

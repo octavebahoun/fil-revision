@@ -6,7 +6,8 @@ export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 export const PUBLISHABLE = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 export const SECRET = process.env.SUPABASE_SECRET_KEY!;
 
-if (!SUPABASE_URL?.includes("127.0.0.1") && !SUPABASE_URL?.includes("localhost")) {
+const isLocal = SUPABASE_URL?.includes("127.0.0.1") || SUPABASE_URL?.includes("localhost");
+if (!isLocal && process.env.TEST_TARGET !== "prod") {
   throw new Error("Les tests d'intégration tournent uniquement contre Supabase local.");
 }
 

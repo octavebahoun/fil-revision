@@ -37,6 +37,11 @@ for (const [k, v] of Object.entries(values)) {
     continue;
   }
   spawnSync("vercel", ["env", "rm", k, "production", "--yes", "--token", token], { stdio: "ignore" });
-  const r = spawnSync("vercel", ["env", "add", k, "production", "--token", token], { input: v, stdio: ["pipe", "ignore", "pipe"] });
-  console.log(`  ${r.status === 0 ? "✓" : "✗"} ${k}${r.status === 0 ? "" : " : " + String(r.stderr).replace(token, "***").slice(0, 120)}`);
+  const r = spawnSync("vercel", ["env", "add", k, "production", "--token", token], {
+    input: v,
+    stdio: ["pipe", "ignore", "pipe"],
+  });
+  console.log(
+    `  ${r.status === 0 ? "✓" : "✗"} ${k}${r.status === 0 ? "" : " : " + String(r.stderr).replace(token, "***").slice(0, 120)}`,
+  );
 }

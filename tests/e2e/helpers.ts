@@ -6,8 +6,9 @@ import { parse } from "dotenv";
 
 function env() {
   const e: Record<string, string> = {};
-  for (const f of [".env", ".env.development.local", ".env.test.local"])
-    if (existsSync(f)) Object.assign(e, parse(readFileSync(f, "utf8")));
+  // Contre la prod (E2E_BASE_URL), seules les clés cloud de .env sont utilisées.
+  const files = process.env.E2E_BASE_URL ? [".env"] : [".env", ".env.development.local", ".env.test.local"];
+  for (const f of files) if (existsSync(f)) Object.assign(e, parse(readFileSync(f, "utf8")));
   return { ...e, ...process.env } as Record<string, string>;
 }
 

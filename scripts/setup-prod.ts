@@ -62,10 +62,15 @@ const upsertSecret = (name: string, value: string) => `
       perform vault.create_secret(${lit(value)}, ${lit(name)});
     end if;
   end $$;`;
-await call("/database/query", "POST", { query: upsertSecret("app_url", appUrl) + upsertSecret("cron_secret", e.CRON_SECRET!) });
+await call("/database/query", "POST", {
+  query: upsertSecret("app_url", appUrl) + upsertSecret("cron_secret", e.CRON_SECRET!),
+});
 console.log("Secrets du planificateur enregistrés dans Vault.");
 
-const emails = (e.ALLOWED_EMAILS ?? "").split(",").map((x) => x.trim().toLowerCase()).filter((x) => x.includes("@"));
+const emails = (e.ALLOWED_EMAILS ?? "")
+  .split(",")
+  .map((x) => x.trim().toLowerCase())
+  .filter((x) => x.includes("@"));
 const db = createClient(e.NEXT_PUBLIC_SUPABASE_URL!, e.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
 const { data, error } = await db.rpc("admin_set_allowed_emails", { p_emails: emails });
 if (error) throw new Error(`Liste blanche : ${error.code}`);
