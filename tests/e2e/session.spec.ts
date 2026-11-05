@@ -16,10 +16,9 @@ test.describe("Session de révision", () => {
     page,
     context,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(150_000);
     user = await makeUser("absence");
     await seedDeck(admin(), user.id);
-    await page.clock.install();
     await login(page, user.email, user.password);
 
     await page.getByRole("button", { name: /Réviser maintenant/ }).click();
@@ -34,8 +33,8 @@ test.describe("Session de révision", () => {
     await expect(page.getByText(/^3\//)).toBeVisible();
     await expect.poll(() => reviewsCount(user!.id)).toBe(2);
 
-    // 2. Inactif 60 s : le bandeau apparaît, aucune erreur n'est comptée.
-    await page.clock.fastForward(60_000);
+    // 2. Inactif 60 s (vraies secondes) : le bandeau apparaît, aucune erreur n'est comptée.
+    await page.waitForTimeout(60_000);
     const banner = page.getByRole("dialog", { name: "Où j'en étais ?" });
     await expect(banner).toBeVisible();
     expect(await reviewsCount(user.id)).toBe(2);
@@ -57,7 +56,7 @@ test.describe("Session de révision", () => {
     await context.setOffline(true);
     await expect(page2.getByText(/Hors ligne/)).toBeVisible();
     await page2.getByRole("button", { name: "Vrai", exact: true }).click();
-    await expect(page2.getByText("Juste !")).toBeVisible();
+    await expect(page2.locator("#contenu").getByText("Juste !")).toBeVisible();
     await page2.getByRole("button", { name: "Continuer" }).click();
     await expect(page2.getByText(/^4\//)).toBeVisible();
     expect(await reviewsCount(user.id)).toBe(2);
@@ -80,7 +79,7 @@ test.describe("Session de révision", () => {
       await page.getByRole("radio", { name: /Mauvaise A/ }).click();
       await page.getByRole("button", { name: "Valider" }).click();
     }
-    await expect(page.getByText("Pas tout à fait.")).toBeVisible();
+    await expect(page.locator("#contenu").getByText("Pas tout à fait.")).toBeVisible();
     await expect
       .poll(
         async () =>

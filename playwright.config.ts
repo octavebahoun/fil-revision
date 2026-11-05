@@ -32,6 +32,7 @@ export default defineConfig({
         url: `${BASE_URL}/connexion`,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
-        env: { NEXT_PUBLIC_SITE_URL: BASE_URL },
+        // La limitation de débit est testée en intégration ; en E2E, toutes les connexions viennent de la même IP.
+        env: { NEXT_PUBLIC_SITE_URL: BASE_URL, RATE_LIMIT_DISABLED: "1" },
       },
 });

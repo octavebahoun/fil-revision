@@ -6,9 +6,10 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
  * Remplace les « toasts » : pas d'animation agressive, disparition douce.
  */
 type Tone = "info" | "success" | "warning";
-type Msg = { id: number; text: string; tone: Tone };
+type Msg = { id: number; text: string; tone: Tone; visual: boolean };
 
-const Ctx = createContext<(text: string, tone?: Tone) => void>(() => {});
+/** visual: false → annonce uniquement pour les lecteurs d'écran (l'information est déjà à l'écran). */
+const Ctx = createContext<(text: string, tone?: Tone, opts?: { visual?: boolean }) => void>(() => {});
 
 export function useAnnounce() {
   return useContext(Ctx);
@@ -19,9 +20,9 @@ export function AnnouncerProvider({ children }: { children: ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const counter = useRef(0);
 
-  const announce = useCallback((text: string, tone: Tone = "info") => {
+  const announce = useCallback((text: string, tone: Tone = "info", opts: { visual?: boolean } = {}) => {
     counter.current += 1;
-    setMsg({ id: counter.current, text, tone });
+    setMsg({ id: counter.current, text, tone, visual: opts.visual !== false });
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setMsg(null), 5000);
   }, []);
@@ -39,7 +40,7 @@ export function AnnouncerProvider({ children }: { children: ReactNode }) {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {msg?.text}
       </div>
-      {msg ? (
+      {msg?.visual ? (
         <div
           key={msg.id}
           aria-hidden="true"

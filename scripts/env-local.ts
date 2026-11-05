@@ -25,11 +25,9 @@ const base = [
 ];
 
 writeFileSync(".env.development.local", base.join("\n") + "\n", { mode: 0o600 });
-writeFileSync(
-  ".env.test.local",
-  [...base, "AI_PRIMARY_PROVIDER=mock", "AI_FALLBACK_PROVIDER=mock", "RATE_LIMIT_DISABLED=0"].join("\n") + "\n",
-  { mode: 0o600 },
-);
+writeFileSync(".env.test.local", [...base, "AI_PRIMARY_PROVIDER=mock", "AI_FALLBACK_PROVIDER=mock"].join("\n") + "\n", {
+  mode: 0o600,
+});
 writeFileSync(".env.localstack", [...base, "AI_PRIMARY_PROVIDER=mock", "AI_FALLBACK_PROVIDER=mock"].join("\n") + "\n", {
   mode: 0o600,
 });

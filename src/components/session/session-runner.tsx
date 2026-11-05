@@ -134,7 +134,7 @@ export function SessionRunner({ session, cards }: Props) {
           stats: next.stats,
           at: new Date().toISOString(),
         });
-        announce("Session terminée. Bravo !", "success");
+        announce("Session terminée. Bravo !", "success", { visual: false });
         return;
       }
       persist(next);
@@ -216,7 +216,9 @@ export function SessionRunner({ session, cards }: Props) {
       persist(next);
       setFeedback({ ...r, explanation: typeof card.content.explanation === "string" ? card.content.explanation : "" });
       setPhase("feedback");
-      announce(r.correct ? "Juste !" : "Pas tout à fait. Voici l'explication.");
+      announce(r.correct ? "Réponse juste." : "Réponse à revoir. L'explication est affichée.", "info", {
+        visual: false,
+      });
     },
     [announce, card, local, persist, record],
   );
@@ -436,7 +438,7 @@ export function SessionRunner({ session, cards }: Props) {
         ) : phase === "question" ? (
           <QuizItem key={card.id} id={card.id} type={card.type} content={card.content} onAnswer={onQuiz} />
         ) : feedback ? (
-          <div className="flex flex-col gap-4" role="status">
+          <div className="flex flex-col gap-4">
             <div
               className={`flex flex-col gap-2 rounded-3xl p-5 ${feedback.correct ? "bg-success-soft" : "bg-warning-soft"}`}
             >
