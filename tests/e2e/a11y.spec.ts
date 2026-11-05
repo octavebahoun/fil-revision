@@ -57,14 +57,12 @@ test("écrans de l'application", async ({ page }) => {
     const db = admin();
     const { data: subject } = await db.from("subjects").select("slug").eq("id", deck.subjectId).single();
     const slug = subject!.slug;
-    await db
-      .from("exams")
-      .insert({
-        user_id: user.id,
-        subject_id: deck.subjectId,
-        title: "Partiel",
-        exam_date: new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10),
-      });
+    await db.from("exams").insert({
+      user_id: user.id,
+      subject_id: deck.subjectId,
+      title: "Partiel",
+      exam_date: new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10),
+    });
     await db.from("parking").insert({ user_id: user.id, text: "Revoir les jointures" });
     const { data: code } = await db
       .from("cards")

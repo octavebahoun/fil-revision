@@ -40,6 +40,13 @@ export default defineConfig({
         "src/lib/utils.ts",
         "src/lib/offline/**",
         "src/lib/client/**",
+        // Câblage et accès aux requêtes Next (couverts par les tests E2E), pas du code métier :
+        "src/lib/empty-module.ts",
+        "src/lib/auth/session.ts",
+        "src/lib/jobs/run.ts",
+        "src/lib/ai/server.ts",
+        "src/lib/data/**",
+        "src/lib/push/send.ts",
       ],
       thresholds: { lines: 80, statements: 80, functions: 80, branches: 70 },
       reporter: ["text-summary", "json-summary"],
