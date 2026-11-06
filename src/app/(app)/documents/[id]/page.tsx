@@ -22,15 +22,14 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[id
   const { supabase } = await requireUser();
   const { data: doc } = await supabase
     .from("documents")
-    .select("id, title, status, error_message, kind, page_count, filename, estimated_cost_usd, subjects(name, slug)")
+    .select("id, title, status, error_message, kind, page_count, filename, estimated_cost_usd, subject_id, subjects(name, slug)")
     .eq("id", id)
     .maybeSingle();
   if (!doc) notFound();
-  const { data: notions } = await supabase
-    .from("notions")
-    .select("id, title, pages, status")
-    .eq("document_id", id)
-    .order("position");
+  const [{ data: notions }, { data: allSubjects }] = await Promise.all([
+    supabase.from("notions").select("id, title, pages, status").eq("document_id", id).order("position"),
+    supabase.from("subjects").select("id, name").order("name"),
+  ]);
   const subject = doc.subjects as unknown as { name: string; slug: string };
   const counts = {
     total: notions?.length ?? 0,
@@ -130,7 +129,9 @@ export default async function DocumentPage({ params }: PageProps<"/documents/[id
         <DocumentAdmin
           documentId={doc.id}
           kind={doc.kind as "cours" | "exercice" | "ressource"}
+          subjectId={doc.subject_id}
           subjectSlug={subject.slug}
+          subjects={allSubjects ?? []}
         />
       </MoreDetails>
     </>

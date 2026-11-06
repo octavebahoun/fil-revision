@@ -10,6 +10,8 @@ type Config = {
   outputMargin?: number;
   /** Paramètre propre au fournisseur pour couper le raisonnement (DeepSeek : thinking.type = disabled). */
   supportsThinkingToggle?: boolean;
+  /** Délai par défaut d'un appel (Meta raisonne plus longtemps que DeepSeek). */
+  defaultTimeoutMs?: number;
 };
 
 type OpenAiResponse = {
@@ -47,7 +49,7 @@ export function createOpenAiCompatibleProvider(cfg: Config, fetchImpl: typeof fe
             ...(req.json ? { response_format: { type: "json_object" } } : {}),
             ...(cfg.supportsThinkingToggle && req.reasoning === "off" ? { thinking: { type: "disabled" } } : {}),
           }),
-          signal: AbortSignal.timeout(req.timeoutMs ?? 55_000),
+          signal: AbortSignal.timeout(req.timeoutMs ?? cfg.defaultTimeoutMs ?? 55_000),
         });
       } catch (err) {
         const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");

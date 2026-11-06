@@ -5,6 +5,8 @@ Chaque choix, avec sa raison en une ou deux lignes. Les plus récentes en bas de
 ## Produit
 - **Nom : « Fil »** — court, français, chaleureux. « Ne pas perdre le fil », « reprendre le fil » : exactement le besoin après une absence. Accroche : « Reprends le fil. »
 - **Étape 0** : toutes les variables du `.env` étaient déjà remplies le 2026-11-04 → aucune question posée, démarrage direct.
+- **Meta, fournisseur IA par défaut** (demande de l'utilisateur, 2026-11-06, prioritaire sur le brief) : choix Meta / DeepSeek dans Réglages, enregistré par compte ; l'autre sert de secours. Conséquences : délai d'appel Meta 110 s, étapes de jobs jusqu'à 120 s (au lieu de < 60 s), bail des jobs 330 s, estimation de coût calculée avec Meta et ses tokens de raisonnement (×2,5).
+- **Changer un cours de matière** (Gérer ce cours → Matière) : notions, cartes et progression suivent. Ajouté après qu'un même PDF (Figma) présent dans deux dossiers a été importé dans la mauvaise matière.
 
 ## Stack
 - **Next.js 16.4 (App Router) + TypeScript strict + Tailwind 4 + shadcn/ui (Radix, preset Nova)**, comme demandé.

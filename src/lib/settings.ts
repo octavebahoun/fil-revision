@@ -12,6 +12,8 @@ export const SettingsSchema = z.object({
   sessionMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(25)]).default(10),
   dailyCapMinutes: z.number().int().min(10).max(180).default(30),
   examTimerDefault: z.boolean().default(false),
+  /** Fournisseur IA principal (choix de l'utilisateur) ; l'autre sert de secours. Meta par défaut. */
+  aiProvider: z.enum(["meta", "deepseek"]).default("meta"),
   reminder: z
     .object({
       enabled: z.boolean().default(false),

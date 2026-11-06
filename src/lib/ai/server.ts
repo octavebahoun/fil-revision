@@ -2,8 +2,10 @@ import "server-only";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
-import { buildProviders } from "./providers";
-import { AiRouter, type AiStore } from "./router";
+import { parseSettings } from "@/lib/settings";
+import type { ProviderName } from "./providers";
+import { PreferenceRouter, type AiGenerator } from "./preference";
+import type { AiStore } from "./router";
 
 /** Début de la journée à Paris, en ISO (le budget se remet à zéro à minuit, heure locale). */
 export function startOfParisDay(now = new Date()): string {
@@ -76,12 +78,19 @@ export const supabaseAiStore: AiStore = {
   },
 };
 
-let router: AiRouter | null = null;
+/** Fournisseur choisi par l'utilisateur dans Réglages (Meta par défaut). */
+export async function readProviderPreference(userId: string): Promise<ProviderName | null> {
+  const { data } = await createAdminClient().from("profiles").select("settings").eq("user_id", userId).maybeSingle();
+  return parseSettings(data?.settings).aiProvider;
+}
 
-export function getAiRouter(): AiRouter {
+let router: PreferenceRouter | null = null;
+
+/** Routeur IA de l'app : respecte le choix Meta / DeepSeek de chaque utilisateur. */
+export function getAiRouter(): AiGenerator {
   if (router) return router;
   const e = env();
-  router = new AiRouter(buildProviders(e), supabaseAiStore, e.AI_DAILY_BUDGET_USD);
+  router = new PreferenceRouter(e, supabaseAiStore, e.AI_DAILY_BUDGET_USD, readProviderPreference);
   return router;
 }
 

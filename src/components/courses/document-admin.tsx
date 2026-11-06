@@ -3,27 +3,34 @@ import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { deleteDocumentAction, setDocumentKindAction } from "@/lib/courses/actions";
+import { useAnnounce } from "@/components/providers/announcer";
+import { deleteDocumentAction, moveDocumentAction, setDocumentKindAction } from "@/lib/courses/actions";
 
 export function DocumentAdmin({
   documentId,
   kind,
+  subjectId,
   subjectSlug,
+  subjects,
 }: {
   documentId: string;
   kind: "cours" | "exercice" | "ressource";
+  subjectId: string;
   subjectSlug: string;
+  subjects: { id: string; name: string }[];
 }) {
   const [confirm, setConfirm] = useState(false);
+  const [target, setTarget] = useState(subjectId);
   const [pending, start] = useTransition();
   const router = useRouter();
+  const announce = useAnnounce();
   const id = useId();
   return (
     <div className="flex flex-col gap-5 pt-2">
       <div className="flex flex-col gap-2">
-        <Label htmlFor={id}>Type de document</Label>
+        <Label htmlFor={`${id}-kind`}>Type de document</Label>
         <select
-          id={id}
+          id={`${id}-kind`}
           defaultValue={kind}
           className="h-12 rounded-xl border border-input bg-card px-3 text-base text-foreground"
           onChange={(e) => start(() => setDocumentKindAction(documentId, e.target.value as typeof kind))}
@@ -33,6 +40,40 @@ export function DocumentAdmin({
           <option value="ressource">Ressource</option>
         </select>
       </div>
+
+      {/* Un cours rangé dans la mauvaise matière : il part avec ses notions, ses cartes et ta progression. */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${id}-subject`}>Matière</Label>
+        <div className="flex flex-wrap gap-2">
+          <select
+            id={`${id}-subject`}
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="h-12 min-w-0 flex-1 rounded-xl border border-input bg-card px-3 text-base text-foreground"
+          >
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <Button
+            variant="outline"
+            disabled={pending || target === subjectId}
+            onClick={() =>
+              start(async () => {
+                const res = await moveDocumentAction(documentId, target);
+                if (!res.ok) return announce(res.message, "warning");
+                announce(`Cours déplacé dans « ${res.subjectName} ».`, "success");
+                router.refresh();
+              })
+            }
+          >
+            Déplacer
+          </Button>
+        </div>
+      </div>
+
       {confirm ? (
         <div role="alert" className="flex flex-col gap-3 rounded-2xl bg-warning-soft p-4 text-foreground">
           <p>Supprimer ce cours, ses notions et ses cartes ? Ta progression dessus sera effacée.</p>

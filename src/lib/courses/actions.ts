@@ -171,6 +171,35 @@ export async function setDocumentKindAction(documentId: string, kind: "cours" | 
   revalidatePath(`/documents/${documentId}`);
 }
 
+/**
+ * Range un cours dans une autre matière : ses notions, ses cartes (et donc ta progression) le suivent.
+ * Tout passe par la RLS : impossible de viser la matière d'un autre compte.
+ */
+export async function moveDocumentAction(
+  documentId: string,
+  subjectId: string,
+): Promise<{ ok: true; subjectName: string } | { ok: false; message: string }> {
+  const { supabase } = await requireUser();
+  const docId = z.uuid().safeParse(documentId);
+  const target = z.uuid().safeParse(subjectId);
+  if (!docId.success || !target.success) return { ok: false, message: "Choix invalide." };
+  const [{ data: doc }, { data: subject }] = await Promise.all([
+    supabase.from("documents").select("id, subject_id").eq("id", docId.data).maybeSingle(),
+    supabase.from("subjects").select("id, name, slug").eq("id", target.data).maybeSingle(),
+  ]);
+  if (!doc || !subject) return { ok: false, message: "Cours ou matière introuvable." };
+  if (doc.subject_id === subject.id) return { ok: true, subjectName: subject.name };
+  const steps = await Promise.all([
+    supabase.from("documents").update({ subject_id: subject.id }).eq("id", doc.id),
+    supabase.from("notions").update({ subject_id: subject.id }).eq("document_id", doc.id),
+    supabase.from("cards").update({ subject_id: subject.id }).eq("document_id", doc.id),
+  ]);
+  if (steps.some((s) => s.error)) return { ok: false, message: "Le déplacement n'a pas abouti. Réessaie." };
+  revalidatePath("/matieres", "layout");
+  revalidatePath(`/documents/${doc.id}`);
+  return { ok: true, subjectName: subject.name };
+}
+
 /** URL signée de courte durée (5 min) pour ouvrir le fichier original. */
 export async function signedSourceUrlAction(documentId: string): Promise<string | null> {
   const { supabase } = await requireUser();

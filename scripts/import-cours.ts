@@ -95,15 +95,14 @@ console.log(`\n${created} nouveau(x), ${duplicates} déjà importé(s), ${reject
 if (wait) {
   // Le worker s'exécute ici, sans limite de durée de fonction ; même code qu'en production.
   const { processJobs } = await import("../src/lib/jobs/worker");
-  const { AiRouter } = await import("../src/lib/ai/router");
-  const { supabaseAiStore } = await import("../src/lib/ai/server");
-  const { buildProviders } = await import("../src/lib/ai/providers");
+  const { PreferenceRouter } = await import("../src/lib/ai/preference");
+  const { supabaseAiStore, readProviderPreference } = await import("../src/lib/ai/server");
   const e = process.env;
-  const providers = buildProviders(e as Record<string, string>);
-  const ai = new AiRouter(providers, supabaseAiStore, Number(e.AI_DAILY_BUDGET_USD ?? 2));
+  // Même règle que l'app : le fournisseur choisi dans Réglages (Meta par défaut), l'autre en secours.
+  const ai = new PreferenceRouter(e as Record<string, string>, supabaseAiStore, Number(e.AI_DAILY_BUDGET_USD ?? 2), readProviderPreference);
   const { jobConfigFromEnv } = await import("../src/lib/jobs/types");
   const ctx = { db: db as never, ai, now: () => new Date(), config: jobConfigFromEnv(e) };
-  console.log(`\nTraitement (${providers.map((p) => p.name).join(" → ")})…`);
+  console.log(`\nTraitement (fournisseur principal : ${await ai.preferenceOf(user.id)})…`);
   const started = Date.now();
   for (;;) {
     const r = await processJobs(ctx, {

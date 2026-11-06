@@ -16,8 +16,10 @@ const HANDLERS: Record<JobRow["type"], JobHandler> = {
   mindmap: mindmapHandler,
 };
 
-const LEASE_SECONDS = 150;
-const STEP_MAX_MS = 60_000;
+// Meta raisonne avant de répondre (jusqu'à ~110 s par appel) : une étape peut dépasser 60 s.
+// Le bail dépasse la durée maximale d'une fonction Vercel (300 s) pour qu'aucun job ne soit repris en double.
+const LEASE_SECONDS = 330;
+const STEP_MAX_MS = 120_000;
 
 function nextParisMidnight(now: Date): Date {
   const d = new Date(now.getTime() + 24 * 3600 * 1000);

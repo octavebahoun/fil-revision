@@ -1,6 +1,6 @@
 import type { Database, Json } from "@/lib/database.types";
 import type { AdminSupabase } from "@/lib/supabase/admin";
-import type { AiRouter } from "@/lib/ai/router";
+import type { AiGenerator } from "@/lib/ai/preference";
 
 export type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 export type JobType = JobRow["type"];
@@ -20,20 +20,19 @@ export type StepResult =
 export type JobConfig = {
   /** Au-delà de ce coût estimé, la génération d'un document attend une confirmation. */
   confirmThresholdUsd: number;
-  models: { main: string; light: string };
+  /** Hypothèse de prix pour l'estimation (la plus chère des deux, par prudence). */
+  models: { main: string; light: string; reasoningFactor?: number };
 };
 
-export type JobContext = { db: AdminSupabase; ai: AiRouter; now: () => Date; config: JobConfig };
+export type JobContext = { db: AdminSupabase; ai: AiGenerator; now: () => Date; config: JobConfig };
 
 export function jobConfigFromEnv(e: Record<string, string | undefined>): JobConfig {
   const mock = e.AI_PRIMARY_PROVIDER === "mock";
+  const meta = e.META_MODEL ?? "muse-spark-1.3-contributor";
   return {
     confirmThresholdUsd: Number(e.AI_CONFIRM_THRESHOLD_USD ?? 0.3),
-    models: mock
-      ? { main: "mock", light: "mock" }
-      : e.AI_PRIMARY_PROVIDER === "meta"
-        ? { main: e.META_MODEL ?? "muse-spark-1.3-contributor", light: e.META_MODEL ?? "muse-spark-1.3-contributor" }
-        : { main: e.DEEPSEEK_MODEL ?? "deepseek-v4-pro", light: e.DEEPSEEK_LIGHT_MODEL ?? "deepseek-flash" },
+    // Meta (fournisseur par défaut) raisonne toujours : sa sortie compte ~2,5 fois plus de tokens.
+    models: mock ? { main: "mock", light: "mock" } : { main: meta, light: meta, reasoningFactor: 2.5 },
   };
 }
 
